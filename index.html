@@ -136,7 +136,7 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 
 .co{background:transparent}
 .co-bar{background:#fff;border-radius:14px 14px 0 0;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
-.co-bar .lang{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:13px;color:var(--text-secondary);cursor:pointer;border:1px solid #D2D1D8;border-radius:20px;padding:6px 12px}
+.co-bar .lang{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-secondary);font-weight:500;cursor:pointer;border:1px solid #D2D1D8;background:#fff;border-radius:20px;padding:6px 12px}
 .fly-logo{display:flex;align-items:center}
 .fly-logo svg{display:block}
 
@@ -150,6 +150,12 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .order-detail .li{display:flex;gap:8px;line-height:20px}
 .order-detail .label{color:var(--text-muted);min-width:80px}
 .order-detail .value{color:var(--text);font-weight:600}
+.expand-more{text-align:center;color:var(--text-muted);font-size:13px;cursor:pointer;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:4px}
+.expand-more svg{transition:transform .15s}
+.expand-more.open svg{transform:rotate(180deg)}
+.order-extra{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--line-regular)}
+.order-extra.open{display:block}
+.order-extra .li{display:flex;justify-content:space-between;font-size:13px;color:var(--text-muted);line-height:22px}
 
 /* ===== §A.2 tabset（支付区） ===== */
 .tabset{background:#fff;border-radius:var(--card-radius);padding:32px 20px;overflow:hidden;margin-top:12px}
@@ -165,11 +171,13 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .payment-icon{width:28px;height:20px;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
 .payment-icon svg,.payment-icon img{display:block}
 .pm-name{flex:1}
-.pm-brands{display:flex;gap:4px;align-items:center}
+.pm-brands{display:flex;gap:4px;align-items:center;flex:0 0 auto}
+.pm-brands .bico{font-size:8px;font-weight:800;padding:3px 5px;border-radius:3px;letter-spacing:.2px;color:#fff}
 .pm-content{display:none;padding:0 16px 16px}
 .pm.sel .pm-content{display:block}
-.wallet-hint{color:var(--text-muted);line-height:20px;font-size:13px;padding-top:2px}
-.wallet-hint b{color:var(--text)}
+.wallet-hint{display:flex;align-items:flex-start;gap:10px;color:var(--text-muted);line-height:20px;font-size:13px;padding-top:2px}
+.wallet-hint .wic{flex:0 0 auto;width:28px;height:28px;border-radius:6px;background:#eceafc;color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px}
+.wallet-hint b{color:var(--accent);font-weight:600}
 .pm-note{color:var(--text-muted);font-size:12px;line-height:18px;margin-top:14px;text-align:center}
 
 /* 合并卡表单（§A.3：卡号独占一行 + MM/YY | CVV 第二行） */
@@ -210,8 +218,15 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .foot-title .text{flex-shrink:0;display:flex;align-items:center;gap:6px}
 .foot-item{display:flex;align-items:flex-start;justify-content:center;gap:8px;color:var(--text-muted);line-height:20px;margin:4px 0}
 .foot-item .pre{color:var(--success);flex:0 0 auto;padding-top:2px}
-.certificate{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:14px 0 6px}
-.secbadge{font-size:9px;font-weight:800;border:1px solid var(--line-regular);border-radius:4px;padding:4px 7px;color:#5b6270;background:#f8fafc;letter-spacing:.2px}
+.certificate{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;padding:14px 0 6px}
+.secbadge{font-size:10px;font-weight:800;border-radius:4px;padding:4px 8px;letter-spacing:.2px;color:#fff;line-height:1.3}
+.secbadge small{display:block;font-size:7px;font-weight:600;opacity:.85;letter-spacing:.3px}
+.secbadge.b1{background:#1A1F71}      /* VISA Secure */
+.secbadge.b2{background:linear-gradient(90deg,#EB001B,#F79E1B);color:#171717}  /* Mastercard ID Check */
+.secbadge.b3{background:#016FD0}      /* Amex SafeKey */
+.secbadge.b4{background:#21A470}      /* PCI DSS */
+.secbadge.b5{background:#0058A3}      /* JCB */
+.secbadge.b6{background:#F5821F}      /* ProtectBuy */
 .foot-fine{color:#a5a4aa;line-height:18px;font-size:12px;margin-top:6px}
 .foot-links{color:var(--text-muted);font-size:13px;margin-top:10px}
 .foot-links b{color:var(--text-secondary)}
@@ -281,6 +296,16 @@ table.matrix td:first-child,table.matrix th:first-child{text-align:left;font-wei
 .spinner{width:46px;height:46px;border:4px solid #E5E7EB;border-top-color:var(--accent);border-radius:50%;margin:0 auto 16px;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .tds-bar{background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13px;padding:10px;border-radius:8px;margin-bottom:14px}
+
+/* 失败弹窗（照真实生产截图：小号图标+标题同行、左对齐正文、单个渐变宽按钮） */
+.modal.fail-modal{text-align:left;padding:22px 22px 24px;position:relative}
+.fail-head{display:flex;align-items:center;gap:10px}
+.fail-head .ic-sm{width:32px;height:32px;border-radius:50%;background:#FEE2E2;color:#DC2626;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex:0 0 auto}
+.fail-head h3{flex:1;margin:0;color:var(--text);font-size:16px}
+.fail-x{cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;flex:0 0 auto;padding:2px}
+.fail-msg{color:var(--text);font-size:14px;line-height:1.65;margin:14px 0 20px}
+.fail-msg .code{color:#B8B7BD;font-size:12px;margin-left:4px;white-space:nowrap}
+.fail-btn-wide{display:block;width:100%;height:48px;border:none;border-radius:24px;background:linear-gradient(90deg,#6366F1,#5548FF);color:#fff;font-weight:600;font-size:15px}
 
 @media(max-width:640px){
   .selectbar{gap:14px}
@@ -368,6 +393,7 @@ const CONFIG = {
       walletSub:"请点击支付按钮并在 {wallet} 的支付页面完成支付",
       pmName:"Name", pmEmail:"Email", pmCountry:"Country and regions",
       paymentNote:"实际展示支付方式以商户开通支付方式为准",
+      expandMore:"展开更多",
       successTitle:"支付成功", successDesc:"您的演示订单已完成（模拟）。",
       failTitle:"支付失败", retry:"重试", close:"关闭",
       tds3Title:"需要银行验证", tds3Desc:"该笔支付需银行验证，正在跳转…",
@@ -402,6 +428,7 @@ const CONFIG = {
       walletSub:"Please click the button and finish payment on the {wallet} page",
       pmName:"Name", pmEmail:"Email", pmCountry:"Country and regions",
       paymentNote:"Actual methods shown depend on the merchant's enabled options.",
+      expandMore:"Expand more",
       successTitle:"Payment successful", successDesc:"Your demo order is complete (simulated).",
       failTitle:"Payment failed", retry:"Retry", close:"Close",
       tds3Title:"Bank verification required", tds3Desc:"This payment needs bank verification, redirecting…",
@@ -419,10 +446,24 @@ const CONFIG = {
     }
   }
 };
-// 失败原因占位（替换为三期 13 条真实本地化文案）
-const FAIL_REASONS = {
-  zh:["卡被发卡行拒付","3DS 验证失败","余额不足"],
-  en:["Declined by issuing bank","3DS verification failed","Insufficient funds"]
+// 失败错误码（已核实的真实文案；按钮文案随错误类型变化，非统一"更换支付方式"）
+const FAIL_CODES = {
+  risk:  { code:"ZFWG00007",
+    zh:"该笔交易被发卡行判定为高风险交易，请建议付款人更换银行卡或联系其发卡行同意支付。",
+    en:"This transaction was declined by the issuing bank as high risk. Please ask the payer to use another card or contact their bank.",
+    btnZh:"更换支付方式", btnEn:"Change payment method" },
+  expiry:{ code:"ZFZF00013",
+    zh:"卡有效期无效，请输入正确的卡有效期。",
+    en:"Invalid card expiry date. Please enter the correct expiry date.",
+    btnZh:"编辑有效期", btnEn:"Edit expiry" },
+  cvv:   { code:"ZFZF00011",
+    zh:"请输入正确的 CVV。",
+    en:"Please enter the correct CVV.",
+    btnZh:"编辑 CVV", btnEn:"Edit CVV" },
+  tds3:  { code:"ZF3D00004",
+    zh:"支付失败。3DS 认证失败，请引导付款人重新验证，或更换卡片。",
+    en:"Payment failed. 3DS authentication failed. Please retry verification or use another card.",
+    btnZh:"重新验证", btnEn:"Verify again" }
 };
 
 /* ============================================================
@@ -439,9 +480,11 @@ const state = {
   region:"BR",                 // 买家地区（演示过滤 PIX/Boleto 用）
   // 体验流程阶段：shop | checkout | redirecting | processing
   flow:"shop",
+  orderExpanded:false,         // 金额卡"展开更多"
   selectedPM:"googlepay",      // 当前选中支付方式（默认 Google Pay，照真源码）
   consoleCollapsed:false,
   force:"success",            // success | fail | 3ds（控制台强制结果）
+  failReason:"risk",          // risk | expiry | cvv | tds3（控制台失败原因下拉）
   tds3on:true,                // 3DS 独立开关
   overlay:null,               // null | processing | success | fail | tds3-loading | tds3-verify | tds3-leave
   codeOpen:false
@@ -652,11 +695,16 @@ function checkoutBody(){
   return `<div class="co">
     ${merchantHosted?`<div class="co-bar">
       <div class="fly-logo">${flyLogoSVG(18)}</div>
-      <div class="lang">🌐 ${state.lang==='zh'?'中文':'English'} <span style="font-size:10px;color:#A5A4AA">▾</span></div>
+      <div class="lang"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#5548FF" stroke-width="1.6"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" stroke="#5548FF" stroke-width="1.6"/></svg> ${state.lang==='zh'?'中文':'English'} <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#A5A4AA" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     </div>`:''}
     <div class="order-box">
       <div class="order-amount"><span class="cur">${a.code}</span><span class="num">${a.int}<i>.${a.dec.replace('.','')}</i></span></div>
       <div class="order-detail"><div class="li"><span class="label">${T('payTo')}</span><span class="value">${CONFIG.merchantName}</span></div></div>
+      <div class="expand-more ${state.orderExpanded?'open':''}" id="order-expand">${T('expandMore')} <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="order-extra ${state.orderExpanded?'open':''}">
+        <div class="li"><span>Order ID</span><span>&lt;占位&gt;</span></div>
+        <div class="li"><span>${T('shopTitle').split(' ·')[0]}</span><span>×1</span></div>
+      </div>
     </div>
     <div class="tabset">
       <div class="pay-head">Payment</div>
@@ -665,13 +713,17 @@ function checkoutBody(){
       ${bigPayBtn()}
     </div>
     <div class="page-footer">
-      <div class="foot-title"><span class="line"></span><span class="text">🛡 ${T('shield')}</span><span class="line r"></span></div>
+      <div class="foot-title"><span class="line"></span><span class="text">${shieldIcon()} ${T('shield')}</span><span class="line r"></span></div>
       <div class="foot-item"><span class="pre">✓</span><span>${T('foot1')}</span></div>
       <div class="foot-item"><span class="pre">✓</span><span>${T('foot2')}</span></div>
       <div class="foot-item"><span class="pre">✓</span><span>${T('foot3')}</span></div>
       <div class="certificate">
-        <span class="secbadge">PCI DSS</span><span class="secbadge">VISA Secure</span><span class="secbadge">Mastercard ID Check</span>
-        <span class="secbadge">Amex SafeKey</span><span class="secbadge">JCB</span><span class="secbadge">ProtectBuy</span>
+        <span class="secbadge b1">VISA<small>SECURE</small></span>
+        <span class="secbadge b2">ID Check<small>Mastercard</small></span>
+        <span class="secbadge b3">SafeKey<small>AMEX</small></span>
+        <span class="secbadge b4">PCI DSS<small>COMPLIANT</small></span>
+        <span class="secbadge b5">JCB<small>J/Secure</small></span>
+        <span class="secbadge b6">ProtectBuy<small>Discover</small></span>
       </div>
       <div class="foot-fine">To better serve you, we may use some of your information according to our Privacy and Cookie Policy.</div>
       <div class="foot-links"><b>Powered by FlyPay</b> &nbsp;|&nbsp; Term of Use &nbsp;|&nbsp; Privacy Policy</div>
@@ -695,10 +747,17 @@ function pmList(){
     let icon='';
     if(pm.id==='card') icon=`<span class="payment-icon">${cardIcon()}</span>`;
     else if(pm.id==='boleto') icon=`<span class="payment-icon">${boletoIcon()}</span>`;
+    const brands = pm.id==='card' ? `<div class="pm-brands">
+      <span class="bico" style="background:#1A1F71">VISA</span>
+      <span class="bico" style="background:#EB001B">MC</span>
+      <span class="bico" style="background:#016FD0">AMEX</span>
+      <span class="bico" style="background:#FF6000">DISC</span>
+      <span class="bico" style="background:#00579F">DINERS</span>
+    </div>` : '';
     let sub='';
     if(sel){
       if(pm.type==='wallet'){
-        sub=`<div class="pm-content"><div class="wallet-hint">${T('walletSub').replace('{wallet}',pm.label)}</div></div>`;
+        sub=`<div class="pm-content"><div class="wallet-hint"><span class="wic">${walletIcon()}</span><span>${T('walletSub').replace('{wallet}',`<b>${pm.label}</b>`)}</span></div></div>`;
       } else if(pm.type==='card'){
         sub=`<div class="pm-content">${cardForm()}</div>`;
       } else if(pm.type==='lpm'){
@@ -712,7 +771,7 @@ function pmList(){
     return `<div class="pm ${sel?'sel':''}" data-pm="${pm.id}">
       <div class="payment-header">
         <span class="el-rad"></span>
-        <div class="payment-content">${icon}<span class="pm-name">${pm.label}</span></div>
+        <div class="payment-content">${icon}<span class="pm-name">${pm.label}</span>${brands}</div>
       </div>
       ${sub}
     </div>`;
@@ -874,6 +933,14 @@ function renderConsole(){
         <button class="cbtn ${state.force==='fail'?'active':''}" data-force="fail">失败</button>
         <button class="cbtn ${state.force==='3ds'?'active':''}" data-force="3ds">触发 3DS</button>
       </div></div>
+      <div class="cg"><label>失败原因（强制结果=失败 时生效）</label>
+        <select class="csel" id="c-failreason">
+          <option value="risk" ${state.failReason==='risk'?'selected':''}>ZFWG00007 · 风险拒付</option>
+          <option value="expiry" ${state.failReason==='expiry'?'selected':''}>ZFZF00013 · 有效期无效</option>
+          <option value="cvv" ${state.failReason==='cvv'?'selected':''}>ZFZF00011 · CVV 错误</option>
+          <option value="tds3" ${state.failReason==='tds3'?'selected':''}>ZF3D00004 · 3DS 认证失败</option>
+        </select>
+      </div>
       <div class="cg"><label>3DS 开关（独立）</label>
         <div class="switch"><div class="toggle ${state.tds3on?'on':''}" id="tds3-toggle"></div><span>${state.tds3on?'开启':'关闭'}</span></div>
       </div>
@@ -940,14 +1007,17 @@ function renderOverlay(){
       <div class="acts"><button class="btn-primary" id="ov-back">${T('backShop')}</button></div>
     </div>`;
   } else if(state.overlay==='fail'){
-    const reason=FAIL_REASONS[state.lang][0]; // 占位取第一条
-    html=`<div class="modal">
-      <div class="ic err">✕</div>
-      <h3>${T('failTitle')}</h3><p>${reason}</p>
-      <div class="acts">
-        <button class="btn-ghost" id="ov-close">${T('close')}</button>
-        <button class="btn-primary" id="ov-retry">${T('retry')}</button>
+    const f=FAIL_CODES[state.failReason]||FAIL_CODES.risk;
+    const msg = state.lang==='zh'?f.zh:f.en;
+    const btnLabel = state.lang==='zh'?f.btnZh:f.btnEn;
+    html=`<div class="modal fail-modal">
+      <div class="fail-head">
+        <span class="ic-sm">✕</span>
+        <h3>${T('failTitle')}</h3>
+        <span class="fail-x" id="ov-close">✕</span>
       </div>
+      <div class="fail-msg">${msg}<span class="code">【${f.code}】</span></div>
+      <button class="fail-btn-wide" id="ov-retry">${btnLabel}</button>
     </div>`;
   }
   root.innerHTML=`<div class="overlay">${html}</div>`;
@@ -972,6 +1042,7 @@ function bindApp(){
   document.querySelectorAll('[data-pm]').forEach(el=>el.onclick=()=>{state.selectedPM=el.dataset.pm;render();});
   const pay=document.getElementById('pay-btn'); if(pay) pay.onclick=submitPay;
   const ct=document.getElementById('code-toggle'); if(ct) ct.onclick=()=>{state.codeOpen=!state.codeOpen;render();};
+  const oe=document.getElementById('order-expand'); if(oe) oe.onclick=()=>{state.orderExpanded=!state.orderExpanded;render();};
 }
 
 // 进入收银台：跳转方式先走整页过渡动画
@@ -1019,8 +1090,9 @@ function bindOverlay(){
   if(back) back.onclick=()=>{state.overlay=null;state.flow='shop';render();};
   const close=document.getElementById('ov-close');
   if(close) close.onclick=()=>{state.overlay=null;render();};
+  // 失败弹窗单按钮：关闭并回到收银台由用户自行修正（非自动重试）
   const retry=document.getElementById('ov-retry');
-  if(retry) retry.onclick=()=>{state.overlay=null;render();setTimeout(submitPay,50);};
+  if(retry) retry.onclick=()=>{state.overlay=null;render();};
   // 3DS 校验页：点完成 → 处理 → 成功；点离开 → 挽留
   const comp=document.getElementById('tds3-complete');
   if(comp) comp.onclick=()=>{
@@ -1039,6 +1111,7 @@ function bindConsole(){
   const head=document.getElementById('console-head');
   if(head) head.onclick=()=>{state.consoleCollapsed=!state.consoleCollapsed;render();};
   document.querySelectorAll('[data-force]').forEach(el=>el.onclick=()=>{state.force=el.dataset.force;render();});
+  const fr=document.getElementById('c-failreason'); if(fr) fr.onchange=()=>{state.failReason=fr.value;render();};
   const tg=document.getElementById('tds3-toggle');
   if(tg) tg.onclick=()=>{state.tds3on=!state.tds3on;render();};
   const ci=document.getElementById('c-int'); if(ci) ci.onchange=()=>{state.integration=ci.value;state.flow='shop';render();};
@@ -1054,7 +1127,7 @@ function resetAll(){
   Object.assign(state,{
     mode:"experience",builder:"WooCommerce",integration:"redirect",perspective:"buyer",
     lang:"zh",device:"desktop",currency:"USD",region:"BR",flow:"shop",
-    selectedPM:"googlepay",force:"success",tds3on:true,overlay:null,codeOpen:false
+    selectedPM:"googlepay",force:"success",failReason:"risk",tds3on:true,overlay:null,codeOpen:false
   });
   render();
 }
@@ -1092,6 +1165,14 @@ function boletoIcon(){
 // Card 图标（通用卡面，非品牌专属，照真源码等价占位）
 function cardIcon(){
   return `<svg width="28" height="20" viewBox="0 0 28 20" fill="none"><rect x="0.25" y="0.25" width="27.5" height="19.5" rx="1.75" fill="#EBF1FA" stroke="#CCCCCC" stroke-width="0.5"/><rect y="4" width="28" height="4" fill="#171717"/><rect x="18" y="13" width="7" height="3" rx="0.5" fill="#171717"/></svg>`;
+}
+// 页脚安全声明盾牌图标（照真源码：绿色盾+对勾）
+function shieldIcon(){
+  return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 3v6c0 4.5-3 8-7 11-4-3-7-6.5-7-11V5l7-3z" fill="#21a470" fill-opacity=".15" stroke="#21a470" stroke-width="1.6"/><path d="M9 12l2 2 4-4" stroke="#21a470" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+// 钱包展开提示图标（手机+卡，非品牌专属）
+function walletIcon(){
+  return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><rect x="4.5" y="6" width="9" height="2" rx="0.5" fill="currentColor" opacity=".5"/><rect x="13" y="9" width="9" height="12" rx="2" fill="currentColor" opacity=".12" stroke="currentColor" stroke-width="1.6"/><circle cx="17.5" cy="17.3" r="1.1" fill="currentColor"/></svg>`;
 }
 
 /* 启动 */
