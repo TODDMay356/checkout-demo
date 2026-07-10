@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>飞来汇收银台 · 交互演示</title>
+<style>
+/* ============================================================
+   §7 品牌 Token —— 编辑入口之一（颜色/圆角一律从此取）
+   ============================================================ */
+:root{
+  /* §A.1 真实品牌 token（从生产源码校正，取代旧的自造配色） */
+  --bg:#F1F2F5; --card:#FFFFFF; --card-radius:16px; --radius-m:8px;
+  --card-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px rgba(16,24,40,.06);
+  --brand-ink:#5548FF;      /* 品牌强调（原深蓝，改为真实主色紫 basic-primary） */
+  --accent:#5548FF;         /* 选中/强调 —— 真实 basic-primary */
+  --accent-soft:#F1F0FF;    /* 选中底 —— 真实 basic-primary-light */
+  --radio-checked:#6366F1;  /* 收银台 radio 选中点 —— 真实 radio-checked */
+  --pay-btn:#000000;        /* 黑色支付按钮 */
+  --text:#171717; --text-muted:#817F86; --text-secondary:#38373D;
+  --success:#21A470;        /* 页脚安全声明绿 —— 真实 success-green */
+  --line:#E4E3EA; --line-regular:#E4E3EA;
+  --font-amount:"IBM Plex Sans Condensed",Manrope,Lato,Inter,-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI","Microsoft YaHei",Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,sans-serif;
+  background:var(--bg); color:var(--text); line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input{font-family:inherit}
+.muted{color:var(--text-muted)}
+
+/* 顶部应用条 */
+.appbar{
+  background:#fff;border-bottom:1px solid var(--line);
+  padding:10px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  position:sticky;top:0;z-index:30;
+}
+.appbar .logo{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--brand-ink)}
+.tabs{display:flex;gap:6px;background:#F1F2F6;padding:4px;border-radius:10px}
+.tab{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--text-muted);font-weight:600}
+.tab.active{background:#fff;color:var(--brand-ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.appbar .right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{padding:6px 12px;font-size:13px;color:var(--text-muted);background:#fff}
+.seg button.active{background:var(--accent);color:#fff}
+
+/* 体验模式选择器栏 */
+.selectbar{
+  background:#fff;border-bottom:1px solid var(--line);padding:14px 18px;
+  display:flex;gap:24px;flex-wrap:wrap;align-items:flex-end;
+}
+.selgroup{display:flex;flex-direction:column;gap:6px}
+.selgroup>label{font-size:12px;color:var(--text-muted);font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{
+  padding:6px 12px;border:1px solid var(--line);border-radius:20px;font-size:13px;
+  background:#fff;color:var(--text);transition:.15s;
+}
+.chip.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:#fff}
+
+/* 组合支持标识 */
+.combo-banner{padding:10px 18px;font-size:13px;font-weight:600;display:none}
+.combo-banner.warn{display:block;background:#FEF3C7;color:#92400E;border-bottom:1px solid #FDE68A}
+.combo-banner.plan{display:block;background:#EEF2FF;color:#3730A3;border-bottom:1px solid #C7D2FE}
+
+/* 主区 */
+.stage{padding:24px 18px;min-height:60vh}
+.stage-inner{max-width:980px;margin:0 auto}
+.viewport-phone .stage-inner{max-width:390px;border:10px solid #111;border-radius:36px;
+  background:var(--bg);padding:14px 10px;box-shadow:var(--card-shadow)}
+
+/* mock 店铺 */
+.shop{background:#fff;border-radius:14px;overflow:hidden;box-shadow:var(--card-shadow)}
+.shop-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.shop-badge{font-weight:800;letter-spacing:.3px;color:var(--brand-ink);font-size:18px}
+.shop-badge small{display:block;font-size:10px;color:var(--text-muted);font-weight:500;letter-spacing:0}
+.shop-body{padding:22px;display:flex;gap:22px;flex-wrap:wrap}
+.prod-img{width:200px;height:200px;border-radius:12px;background:
+  repeating-linear-gradient(45deg,#F3F4F6,#F3F4F6 12px,#E9EBEF 12px,#E9EBEF 24px);
+  display:flex;align-items:center;justify-content:center;color:#9AA1AC;font-size:13px;flex:0 0 auto}
+.prod-info{flex:1;min-width:200px;display:flex;flex-direction:column;gap:10px}
+.prod-info h2{font-size:20px;color:var(--brand-ink)}
+.prod-price{font-size:26px;font-weight:800;color:var(--text)}
+.btn-primary{background:var(--accent);color:#fff;padding:12px 22px;border-radius:10px;font-weight:700;font-size:15px;align-self:flex-start}
+.btn-ghost{border:1px solid var(--line);padding:10px 18px;border-radius:10px;font-weight:600;color:var(--text)}
+
+/* 收银台本体 */
+.checkout-wrap{max-width:680px;margin:0 auto}
+.fake-url{background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 12px;
+  font-size:12px;color:var(--text-muted);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.fake-url b{color:#16A34A}
+.embed-frame{border:2px dashed var(--accent);border-radius:14px;padding:4px;background:var(--accent-soft)}
+
+/* 商户自有结账页外壳（内嵌/API直连/Element 用，表明不离站） */
+.mshell{max-width:900px;margin:0 auto}
+.browser{background:#E3E6EB;border-radius:12px 12px 0 0;padding:8px 12px;display:flex;align-items:center;gap:8px}
+.browser .dots{display:flex;gap:5px}
+.browser .dots i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.browser .dots i:nth-child(1){background:#FF5F57}.browser .dots i:nth-child(2){background:#FEBC2E}.browser .dots i:nth-child(3){background:#28C840}
+.browser .url{flex:1;background:#fff;border-radius:7px;padding:6px 12px;font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+.browser .url b{color:#16A34A}
+.browser .stay{font-size:11px;color:#16A34A;font-weight:700;white-space:nowrap}
+.mpage{background:#fff;border-radius:0 0 12px 12px;box-shadow:var(--card-shadow);overflow:hidden}
+.mhead{padding:14px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.mhead .mlogo{font-weight:800;color:var(--brand-ink);font-size:18px;letter-spacing:.3px}
+.mhead .mnav{margin-left:auto;display:flex;gap:18px;font-size:13px;color:var(--text-muted)}
+.mhead .secure{font-size:12px;color:#16A34A;font-weight:600;display:flex;align-items:center;gap:4px}
+.mbody{display:flex;gap:0}
+.mcol-pay{flex:1.3;padding:24px;border-right:1px solid var(--line);min-width:0}
+.mcol-sum{flex:1;padding:24px;background:#FAFBFC;min-width:0}
+.mcol-pay h3,.mcol-sum h3{font-size:15px;color:var(--brand-ink);margin-bottom:14px}
+.osum-item{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+.osum-thumb{width:54px;height:54px;border-radius:8px;background:
+  repeating-linear-gradient(45deg,#F3F4F6,#F3F4F6 8px,#E9EBEF 8px,#E9EBEF 16px);flex:0 0 auto;position:relative}
+.osum-thumb .qty{position:absolute;top:-7px;right:-7px;background:#6B7280;color:#fff;font-size:11px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
+.osum-item .nm{flex:1;font-size:13px}
+.osum-item .pr{font-size:13px;font-weight:700}
+.osum-line{display:flex;justify-content:space-between;font-size:13px;color:var(--text-muted);margin:6px 0}
+.osum-total{display:flex;justify-content:space-between;font-size:17px;font-weight:800;color:var(--brand-ink);border-top:1px solid var(--line);padding-top:12px;margin-top:8px}
+.mform-field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.mform-field label{font-size:12px;color:var(--text-muted);font-weight:600}
+.mform-field input{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px}
+.mform-field input:focus{outline:none;border-color:var(--accent)}
+.powered{font-size:11px;color:var(--text-muted);text-align:center;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:5px}
+.mtitle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.mtitle-row h3{margin:0}
+.host-tag{font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px}
+.host-fly{background:var(--accent-soft);color:var(--accent)}
+.host-mer{background:#FEF3C7;color:#92400E}
+@media(max-width:640px){.mbody{flex-direction:column}.mcol-pay{border-right:none;border-bottom:1px solid var(--line)}}
+.embed-tag{font-size:11px;color:var(--accent);font-weight:700;padding:4px 8px}
+
+.co{background:transparent}
+.co-bar{background:#fff;border-radius:14px 14px 0 0;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.co-bar .lang{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:13px;color:var(--text-secondary);cursor:pointer;border:1px solid #D2D1D8;border-radius:20px;padding:6px 12px}
+.fly-logo{display:flex;align-items:center}
+.fly-logo svg{display:block}
+
+/* ===== §A.2 order-box（金额卡：C 金额 / B 付给） ===== */
+.order-box{background:#fff;border-radius:var(--card-radius);padding:32px;text-align:left}
+.order-amount{display:flex;align-items:baseline;justify-content:center;gap:4px;color:var(--text);line-height:1.4;padding:16px 0}
+.order-amount .cur{font-size:14px}
+.order-amount .num{font-family:var(--font-amount);font-size:48px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1}
+.order-amount .num i{font-size:24px;font-style:normal}
+.order-detail{margin-top:16px}
+.order-detail .li{display:flex;gap:8px;line-height:20px}
+.order-detail .label{color:var(--text-muted);min-width:80px}
+.order-detail .value{color:var(--text);font-weight:600}
+
+/* ===== §A.2 tabset（支付区） ===== */
+.tabset{background:#fff;border-radius:var(--card-radius);padding:32px 20px;overflow:hidden;margin-top:12px}
+.pay-head{font-size:16px;font-weight:700;color:var(--text);margin:2px 0 16px}
+.pm-list{display:flex;flex-direction:column;gap:12px}
+.pm{border:1px solid var(--line-regular);border-radius:var(--radius-m);overflow:hidden;transition:box-shadow .12s,background .12s}
+.pm.sel{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent);border-color:transparent}
+.payment-header{display:flex;align-items:center;height:48px;padding:0 16px;cursor:pointer;gap:12px}
+.el-rad{width:16px;height:16px;border-radius:50%;border:2px solid #d1d5db;flex:0 0 auto;position:relative;background:#fff}
+.pm.sel .el-rad{border-color:var(--radio-checked)}
+.pm.sel .el-rad::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:8px;height:8px;border-radius:50%;background:var(--radio-checked)}
+.payment-content{display:flex;align-items:center;gap:10px;color:var(--text);font-weight:600;width:100%}
+.payment-icon{width:28px;height:20px;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+.payment-icon svg,.payment-icon img{display:block}
+.pm-name{flex:1}
+.pm-brands{display:flex;gap:4px;align-items:center}
+.pm-content{display:none;padding:0 16px 16px}
+.pm.sel .pm-content{display:block}
+.wallet-hint{color:var(--text-muted);line-height:20px;font-size:13px;padding-top:2px}
+.wallet-hint b{color:var(--text)}
+.pm-note{color:var(--text-muted);font-size:12px;line-height:18px;margin-top:14px;text-align:center}
+
+/* 合并卡表单（§A.3：卡号独占一行 + MM/YY | CVV 第二行） */
+.field-label{color:var(--text-secondary);font-weight:500;margin:2px 0 8px}
+.card-group{border:1px solid var(--line-regular);border-radius:var(--radius-m);overflow:hidden}
+.cg-row{display:flex}
+.cg-cell{display:flex;align-items:center;padding:0 12px;height:48px;flex:1;min-width:0}
+.cg-cell input{border:none;outline:none;height:100%;width:100%;font-size:14px;background:transparent;color:var(--text)}
+.cg-cell input::placeholder{color:#b8b7bd}
+.cg-num{border-bottom:1px solid var(--line-regular)}
+.cg-exp{border-right:1px solid var(--line-regular)}
+.brand-ico{display:flex;gap:4px;align-items:center;flex:0 0 auto;margin-left:8px}
+.brand-ico span{font-size:8px;font-weight:800;padding:2px 4px;border-radius:3px;background:#e5e6ea;color:#5b6270;letter-spacing:.2px}
+.cvv-hint{width:26px;height:17px;border-radius:3px;background:#e5e6ea;flex:0 0 auto;margin-left:6px;position:relative}
+.cvv-hint::after{content:"123";position:absolute;right:2px;top:3px;font-size:7px;color:#7b7a80;font-weight:700}
+.cf-element-tag{font-size:10px;color:var(--accent);font-weight:700;margin-top:6px}
+.pci-note{font-size:11px;color:var(--text-muted);margin-top:6px}
+
+/* PIX / Boleto 表单（§A.4） */
+.lpm-form{display:flex;flex-direction:column;gap:10px;padding-top:4px}
+.lpm-field{display:flex;flex-direction:column;gap:6px}
+.lpm-field label{color:var(--text-secondary);font-weight:500;font-size:13px}
+.lpm-field input{border:1px solid var(--line-regular);border-radius:var(--radius-m);height:48px;padding:0 12px;font-size:14px;color:var(--text);outline:none}
+.lpm-field input:focus{border-color:var(--accent)}
+.lpm-field input[readonly]{background:#f7f7f9;color:var(--text-muted)}
+
+/* 提交按钮 */
+.submit-box{display:flex;justify-content:center;width:100%;margin:20px 0 0}
+.submit-btn{border-radius:24px;font-size:16px;font-weight:600;height:48px;min-width:260px;background:var(--pay-btn);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px}
+.submit-btn.gpay{background:#000}
+@media(max-width:400px){.submit-btn{min-width:100%;width:100%}}
+
+/* 页脚 D（§A.5） */
+.page-footer{max-width:518px;margin:24px auto 0;font-size:14px;text-align:center;padding:0 16px}
+.foot-title{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--success);font-weight:600;line-height:22px;margin-bottom:12px}
+.foot-title .line{flex:1;height:1px;background:linear-gradient(90deg,rgba(217,217,217,0),#d9d9d9)}
+.foot-title .line.r{background:linear-gradient(270deg,rgba(217,217,217,0),#d9d9d9)}
+.foot-title .text{flex-shrink:0;display:flex;align-items:center;gap:6px}
+.foot-item{display:flex;align-items:flex-start;justify-content:center;gap:8px;color:var(--text-muted);line-height:20px;margin:4px 0}
+.foot-item .pre{color:var(--success);flex:0 0 auto;padding-top:2px}
+.certificate{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:14px 0 6px}
+.secbadge{font-size:9px;font-weight:800;border:1px solid var(--line-regular);border-radius:4px;padding:4px 7px;color:#5b6270;background:#f8fafc;letter-spacing:.2px}
+.foot-fine{color:#a5a4aa;line-height:18px;font-size:12px;margin-top:6px}
+.foot-links{color:var(--text-muted);font-size:13px;margin-top:10px}
+.foot-links b{color:var(--text-secondary)}
+
+/* 商户视角 */
+.merch{background:#fff;border-radius:14px;box-shadow:var(--card-shadow);padding:22px;max-width:760px;margin:0 auto}
+.merch h3{color:var(--brand-ink);margin-bottom:14px}
+.steps{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.step{flex:1;min-width:180px;border:1px solid var(--line);border-radius:12px;padding:14px}
+.step .n{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;margin-bottom:8px}
+.step h4{font-size:14px;margin-bottom:4px}
+.step p{font-size:12px;color:var(--text-muted)}
+.code-toggle{font-size:13px;font-weight:700;color:var(--accent);cursor:pointer;user-select:none}
+pre.code{background:#0F172A;color:#E2E8F0;border-radius:10px;padding:14px;font-size:12px;overflow:auto;margin-top:10px;line-height:1.6;display:none}
+pre.code.open{display:block}
+.sdk-note{margin-top:12px;font-size:12px;color:var(--text-muted);background:var(--accent-soft);padding:10px 12px;border-radius:8px}
+
+/* 能力总览 */
+.overview{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.panel{background:#fff;border-radius:14px;box-shadow:var(--card-shadow);padding:22px}
+.panel h3{color:var(--brand-ink);margin-bottom:14px}
+table.matrix{width:100%;border-collapse:collapse;font-size:14px}
+table.matrix th,table.matrix td{border:1px solid var(--line);padding:10px;text-align:center}
+table.matrix th{background:#F8FAFC;color:var(--brand-ink)}
+table.matrix td:first-child,table.matrix th:first-child{text-align:left;font-weight:700}
+.yes{color:var(--success);font-weight:800}
+.no{color:#CBD2DC;font-weight:800}
+.planned{color:#9AA1AC;font-style:italic;border:1px dashed #C7D2FE;border-radius:6px;padding:2px 6px;font-size:12px}
+.summary{font-size:13px;color:var(--text-muted);margin-top:12px}
+.cov{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.cov span{font-size:12px;background:#F1F2F6;border-radius:20px;padding:5px 12px;font-weight:600;color:var(--text)}
+.stat{display:flex;gap:16px;flex-wrap:wrap}
+.statbox{flex:1;min-width:140px;border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center}
+.statbox .v{font-size:28px;font-weight:800;color:var(--accent)}
+.statbox .k{font-size:12px;color:var(--text-muted);margin-top:4px}
+.ph-tag{display:inline-block;font-size:10px;background:#FEF3C7;color:#92400E;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700}
+
+/* 导演控制台 */
+.console{position:fixed;right:18px;bottom:18px;z-index:50;width:300px;
+  background:#0F172A;color:#E2E8F0;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.4);overflow:hidden}
+.console-head{padding:12px 14px;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:#1E293B}
+.console-body{padding:12px 14px;display:flex;flex-direction:column;gap:12px;max-height:60vh;overflow:auto}
+.console.collapsed .console-body{display:none}
+.cg{display:flex;flex-direction:column;gap:6px}
+.cg>label{font-size:11px;color:#94A3B8;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.cbtns{display:flex;gap:6px;flex-wrap:wrap}
+.cbtn{background:#334155;color:#E2E8F0;font-size:12px;padding:6px 10px;border-radius:7px;font-weight:600}
+.cbtn.active{background:var(--accent);color:#fff}
+.switch{display:flex;align-items:center;gap:8px;font-size:12px}
+.toggle{width:38px;height:22px;border-radius:20px;background:#475569;position:relative;transition:.15s;flex:0 0 auto}
+.toggle.on{background:var(--accent)}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}
+.toggle.on::after{left:18px}
+.csel{background:#1E293B;color:#E2E8F0;border:1px solid #334155;border-radius:7px;padding:6px 8px;font-size:12px}
+.creset{background:#7F1D1D;color:#FECACA}
+
+/* 弹层（成功/失败/3DS/挽留） */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:16px;max-width:420px;width:100%;padding:26px;text-align:center;box-shadow:var(--card-shadow)}
+.modal .ic{width:64px;height:64px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:32px}
+.modal .ic.ok{background:#DCFCE7;color:var(--success)}
+.modal .ic.err{background:#FEE2E2;color:#DC2626}
+.modal .ic.info{background:#E0E7FF;color:var(--accent)}
+.modal h3{margin-bottom:8px;color:var(--brand-ink)}
+.modal p{color:var(--text-muted);font-size:14px;margin-bottom:18px}
+.modal .acts{display:flex;gap:10px;justify-content:center}
+.spinner{width:46px;height:46px;border:4px solid #E5E7EB;border-top-color:var(--accent);border-radius:50%;margin:0 auto 16px;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tds-bar{background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13px;padding:10px;border-radius:8px;margin-bottom:14px}
+
+@media(max-width:640px){
+  .selectbar{gap:14px}
+  .shop-body{flex-direction:column}
+  .prod-img{width:100%}
+  .console{width:calc(100% - 36px)}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="console-root"></div>
+<div id="overlay-root"></div>
+
+<script>
+/* ============================================================
+   §11 数据配置 —— 编辑入口之二（渲染全部读 CONFIG，禁止硬编码进 DOM）
+   ============================================================ */
+const CONFIG = {
+  builders:["WooCommerce","Shopyy","OpenCart","Shoplazza(店匠)","Magento2","Ueeshop","自建站(自有商城)"],
+  // 内部 key 与显示名映射（店匠显示中文、矩阵用 key）
+  builderKey:{
+    "WooCommerce":"WooCommerce","Shopyy":"Shopyy","OpenCart":"OpenCart",
+    "Shoplazza(店匠)":"Shoplazza","Magento2":"Magento2","Ueeshop":"Ueeshop",
+    "自建站(自有商城)":"SelfHosted"
+  },
+  integrations:["redirect","embedded","api","element"],
+  // §5 支持矩阵：true / false / "planned"
+  support:{
+    WooCommerce:{redirect:true, embedded:true,  api:false, element:"planned"},
+    Shopyy:     {redirect:true, embedded:false, api:true,  element:false},
+    Shoplazza:  {redirect:true, embedded:false, api:true,  element:false},
+    OpenCart:   {redirect:false,embedded:true,  api:false, element:false},
+    Magento2:   {redirect:true, embedded:true,  api:false, element:false},
+    Ueeshop:    {redirect:true, embedded:false, api:false, element:false},
+    // 自建站最灵活，跳转/内嵌/API 直连均可；Element 仍仅 WooCommerce 规划中，故此处不打实勾
+    SelfHosted: {redirect:true, embedded:true,  api:true,  element:false}
+  },
+  currencies:[
+    {code:"USD",symbol:"$",demoRate:1},      // 默认
+    {code:"EUR",symbol:"€",demoRate:0.92}    // 演示汇率
+  ],
+  // 买家地区（演示用）：仅用于过滤 PIX/Boleto 是否在列，非真实路由逻辑
+  regions:[
+    {code:"BR",name:"巴西"},
+    {code:"US",name:"美国"},
+    {code:"HK",name:"中国香港"}
+  ],
+  // 默认支付列表（照真源码顺序）：Apple Pay / Google Pay(默认选中) / Card / PIX / Boleto
+  // region=GLOBAL 恒显示；region=BR 仅当"买家地区"为 BR 时显示（演示过滤）
+  paymentMethods:[
+    {id:"applepay", label:"Apple Pay",  type:"wallet", region:"GLOBAL"},
+    {id:"googlepay",label:"Google Pay", type:"wallet", region:"GLOBAL", default:true},
+    {id:"card",     label:"Card",       type:"card",   region:"GLOBAL"},
+    {id:"pix",      label:"PIX",        type:"lpm",    region:"BR"},
+    {id:"boleto",   label:"Boleto",     type:"lpm",    region:"BR"}
+  ],
+  // §11 卡表单形态：combined / split（Element=合并、API直连=拆分）
+  cardFieldStyle:{ redirect:"combined", embedded:"combined", element:"combined", api:"split" },
+  merchantName:"Payfi Trading Co., Limited", // 【可改】
+  baseAmount:3.29, // 演示金额（USD）
+  // 卖点数字（占位待替换，不得伪装真实统计）
+  stats:[
+    {v:"99.9%",k:"演示支付成功率"},
+    {v:"150+", k:"覆盖国家/地区"},
+    {v:"20+",  k:"本地支付方式"}
+  ],
+  i18n:{
+    zh:{
+      experience:"体验模式", overview:"能力总览",
+      builder:"建站工具", integration:"对接方式", view:"视角",
+      buyer:"买家视角", merchant:"商户视角",
+      lang:"语言", device:"设备", desktop:"桌面", phone:"手机",
+      region:"买家地区", regionNote:"演示用，实际以商户开通及路由为准",
+      checkout:"去结算", payTo:"付给",
+      pay:"支付", continue:"继续",
+      shopTitle:"演示商品 · 跨境优选好物", shopDesc:"这是用于演示收银台的占位商品。",
+      foot1:"FlyPay 保护您的隐私安全，并遵循 PCI DSS 安全标准",
+      foot2:"所有数据均已加密，信息安全有保障",
+      foot3:"我们绝不会泄露您的个人信息",
+      shield:"FlyPay 将全程保障您的支付安全",
+      cardNum:"卡号", exp:"有效期", cvv:"CVV", cardName:"持卡人",
+      firstName:"名", lastName:"姓",
+      pciNote:"Card information is guaranteed to be safe according to PCI DSS standards",
+      walletSub:"请点击支付按钮并在 {wallet} 的支付页面完成支付",
+      pmName:"Name", pmEmail:"Email", pmCountry:"Country and regions",
+      paymentNote:"实际展示支付方式以商户开通支付方式为准",
+      successTitle:"支付成功", successDesc:"您的演示订单已完成（模拟）。",
+      failTitle:"支付失败", retry:"重试", close:"关闭",
+      tds3Title:"需要银行验证", tds3Desc:"该笔支付需银行验证，正在跳转…",
+      tds3Verify:"正在完成银行验证", tds3Leave:"离开验证？", tds3LeaveDesc:"离开将中断本次银行验证，确定要离开吗？",
+      stay:"继续验证", leave:"仍要离开",
+      backShop:"返回店铺", processing:"正在处理支付…",
+      notSupported:"该组合：暂未支持", planned:"该组合：规划中",
+      merStep1Title:"接入下单", merStep1:"调用飞来汇下单接口创建支付单（字段以官方文档为准）。",
+      merStep2Title:"渲染收银台", merStep2:"按对接方式渲染收银台 / 卡字段控件。",
+      merStep3Title:"接收结果", merStep3:"通过回调 / 查询接口获取支付结果并更新订单。",
+      showCode:"展开示例代码", hideCode:"收起代码",
+      sdkNote:"Apple Pay / Google Pay 提供 SDK 供商户集成。",
+      testCardTip:"演示环境请使用测试卡号 4242 4242 4242 4242",
+      phPlaceholder:"占位待替换"
+    },
+    en:{
+      experience:"Experience", overview:"Capabilities",
+      builder:"Builder", integration:"Integration", view:"View",
+      buyer:"Buyer", merchant:"Merchant",
+      lang:"Language", device:"Device", desktop:"Desktop", phone:"Phone",
+      region:"Buyer region", regionNote:"For demo purposes only; actual availability depends on merchant setup and routing.",
+      checkout:"Checkout", payTo:"Pay to",
+      pay:"Pay", continue:"Continue",
+      shopTitle:"Demo Product · Cross-border Pick", shopDesc:"A placeholder product for the checkout demo.",
+      foot1:"FlyPay protects your privacy and follows PCI DSS security standards.",
+      foot2:"All data is encrypted, information is secure.",
+      foot3:"We will never disclose your personal information.",
+      shield:"Your payment is secured by FlyPay",
+      cardNum:"Card number", exp:"Expiry", cvv:"CVV", cardName:"Cardholder",
+      firstName:"First name", lastName:"Last name",
+      pciNote:"Card information is guaranteed to be safe according to PCI DSS standards",
+      walletSub:"Please click the button and finish payment on the {wallet} page",
+      pmName:"Name", pmEmail:"Email", pmCountry:"Country and regions",
+      paymentNote:"Actual methods shown depend on the merchant's enabled options.",
+      successTitle:"Payment successful", successDesc:"Your demo order is complete (simulated).",
+      failTitle:"Payment failed", retry:"Retry", close:"Close",
+      tds3Title:"Bank verification required", tds3Desc:"This payment needs bank verification, redirecting…",
+      tds3Verify:"Completing bank verification", tds3Leave:"Leave verification?", tds3LeaveDesc:"Leaving will interrupt the bank verification. Are you sure?",
+      stay:"Stay", leave:"Leave anyway",
+      backShop:"Back to shop", processing:"Processing payment…",
+      notSupported:"This combo: not supported yet", planned:"This combo: planned",
+      merStep1Title:"Create order", merStep1:"Call Flyway order API to create a payment (fields per official docs).",
+      merStep2Title:"Render checkout", merStep2:"Render checkout / card field control per integration.",
+      merStep3Title:"Receive result", merStep3:"Get result via callback/query API and update the order.",
+      showCode:"Show sample code", hideCode:"Hide code",
+      sdkNote:"Apple Pay / Google Pay provide SDKs for merchant integration.",
+      testCardTip:"Use test card 4242 4242 4242 4242 in this demo",
+      phPlaceholder:"placeholder"
+    }
+  }
+};
+// 失败原因占位（替换为三期 13 条真实本地化文案）
+const FAIL_REASONS = {
+  zh:["卡被发卡行拒付","3DS 验证失败","余额不足"],
+  en:["Declined by issuing bank","3DS verification failed","Insufficient funds"]
+};
+
+/* ============================================================
+   集中 state + render()
+   ============================================================ */
+const state = {
+  mode:"experience",          // experience | overview
+  builder:"WooCommerce",      // 显示名
+  integration:"redirect",
+  perspective:"buyer",        // buyer | merchant
+  lang:"zh",
+  device:"desktop",           // desktop | phone
+  currency:"USD",
+  region:"BR",                 // 买家地区（演示过滤 PIX/Boleto 用）
+  // 体验流程阶段：shop | checkout | redirecting | processing
+  flow:"shop",
+  selectedPM:"googlepay",      // 当前选中支付方式（默认 Google Pay，照真源码）
+  consoleCollapsed:false,
+  force:"success",            // success | fail | 3ds（控制台强制结果）
+  tds3on:true,                // 3DS 独立开关
+  overlay:null,               // null | processing | success | fail | tds3-loading | tds3-verify | tds3-leave
+  codeOpen:false
+};
+
+const T = k => (CONFIG.i18n[state.lang][k] ?? k);
+const bKey = name => CONFIG.builderKey[name];
+const supportOf = () => CONFIG.support[bKey(state.builder)][state.integration];
+const curObj = () => CONFIG.currencies.find(c=>c.code===state.currency);
+function amountStr(){
+  const c=curObj(); const v=CONFIG.baseAmount*c.demoRate;
+  return {sym:c.symbol,code:c.code,int:Math.floor(v),dec:(v-Math.floor(v)).toFixed(2).slice(1)};
+}
+
+function render(){
+  renderApp();
+  renderConsole();
+  renderOverlay();
+}
+
+/* ---------- 顶部应用条 + 路由 ---------- */
+function renderApp(){
+  const app=document.getElementById('app');
+  app.className = state.device==='phone' ? 'viewport-phone' : '';
+  app.innerHTML = appbar() + (state.mode==='experience'
+      ? selectbar()+comboBanner()+`<div class="stage"><div class="stage-inner">${experienceStage()}</div></div>`
+      : `<div class="stage"><div class="stage-inner">${overviewStage()}</div></div>`);
+  bindApp();
+}
+
+function appbar(){
+  return `<div class="appbar">
+    <div class="logo">${flySVG(20)} <span>飞来汇收银台 · 演示</span></div>
+    <div class="tabs">
+      <div class="tab ${state.mode==='experience'?'active':''}" data-mode="experience">${T('experience')}</div>
+      <div class="tab ${state.mode==='overview'?'active':''}" data-mode="overview">${T('overview')}</div>
+    </div>
+    <div class="right">
+      <div class="seg" data-seg="lang">
+        <button class="${state.lang==='zh'?'active':''}" data-lang="zh">中</button>
+        <button class="${state.lang==='en'?'active':''}" data-lang="en">EN</button>
+      </div>
+      <div class="seg" data-seg="device">
+        <button class="${state.device==='desktop'?'active':''}" data-device="desktop">${T('desktop')}</button>
+        <button class="${state.device==='phone'?'active':''}" data-device="phone">${T('phone')}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function selectbar(){
+  const bChips=CONFIG.builders.map(b=>
+    `<button class="chip ${state.builder===b?'active':''}" data-builder="${b}">${b}</button>`).join('');
+  const iLabels={redirect:"跳转 Redirect",embedded:"内嵌 Embedded",api:"API 直连",element:"Element"};
+  const iChips=CONFIG.integrations.map(i=>
+    `<button class="chip ${state.integration===i?'active':''}" data-int="${i}">${iLabels[i]}</button>`).join('');
+  const pChips=["buyer","merchant"].map(p=>
+    `<button class="chip ${state.perspective===p?'active':''}" data-persp="${p}">${T(p)}</button>`).join('');
+  const rOpts=CONFIG.regions.map(r=>
+    `<option value="${r.code}" ${state.region===r.code?'selected':''}>${r.name}</option>`).join('');
+  const curOpts=CONFIG.currencies.map(c=>
+    `<option value="${c.code}" ${state.currency===c.code?'selected':''}>${c.code}</option>`).join('');
+  return `<div class="selectbar">
+    <div class="selgroup"><label>${T('builder')}（${CONFIG.builders.length}）</label><div class="chips">${bChips}</div></div>
+    <div class="selgroup"><label>${T('integration')}（4）</label><div class="chips">${iChips}</div></div>
+    <div class="selgroup"><label>${T('view')}</label><div class="chips">${pChips}</div></div>
+    <div class="selgroup"><label>${T('region')} <span style="font-weight:400;color:var(--text-muted)">(${T('regionNote')})</span></label><select class="nice" id="sel-region">${rOpts}</select></div>
+    <div class="selgroup"><label>币种</label><select class="nice" id="sel-cur">${curOpts}</select></div>
+  </div>`;
+}
+
+function comboBanner(){
+  const s=supportOf();
+  if(s===true) return `<div class="combo-banner"></div>`;
+  if(s==="planned") return `<div class="combo-banner plan">⚠ ${T('planned')}（仍可预览，如实标注）</div>`;
+  return `<div class="combo-banner warn">⚠ ${T('notSupported')}（仍可预览，如实标注）</div>`;
+}
+
+/* ---------- 体验舞台 ---------- */
+function experienceStage(){
+  if(state.perspective==='merchant') return merchantView();
+  // 买家视角：按 flow 渲染
+  if(state.flow==='shop') return shopView();
+  if(state.flow==='redirecting') return redirectingView();
+  if(state.flow==='checkout') return checkoutView();
+  return shopView();
+}
+
+function shopView(){
+  const a=amountStr();
+  return `<div class="shop">
+    <div class="shop-head">
+      <div class="shop-badge">${state.builder.replace(/\(.*\)/,'')}<small>mock 店铺（文字徽标，非平台官方 logo）</small></div>
+      <button class="btn-ghost">🛒 1</button>
+    </div>
+    <div class="shop-body">
+      <div class="prod-img">商品图占位</div>
+      <div class="prod-info">
+        <h2>${T('shopTitle')}</h2>
+        <p class="muted">${T('shopDesc')}</p>
+        <div class="prod-price">${a.sym}${a.int}${a.dec}</div>
+        <button class="btn-primary" id="go-checkout">${T('checkout')} →</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function redirectingView(){
+  return `<div class="checkout-wrap"><div class="co" style="background:#fff;border-radius:14px;padding:50px 20px;text-align:center">
+    <div class="spinner"></div>
+    <p class="muted">${T('tds3Desc').replace('，正在跳转…','')} 正在前往飞来汇托管收银台…</p>
+  </div></div>`;
+}
+
+/* 收银台视图：按对接方式包裹不同外壳 */
+function checkoutView(){
+  // 跳转 Redirect：唯一离站形态 —— 整页切到飞来汇托管收银台
+  if(state.integration==='redirect'){
+    return `<div class="checkout-wrap">
+      <div class="fake-url">🔒 <b>https://checkout.flyway-demo.com</b>/pay/se_xxx　<span style="margin-left:auto;color:#92400E;font-weight:700">↪ 已离开商户站，现位于飞来汇托管页</span></div>
+      ${checkoutBody()}
+    </div>`;
+  }
+  // 内嵌 / API 直连 / Element：均在商户自有结账页内完成，不离站
+  let payInner='';
+  if(state.integration==='embedded'){
+    payInner=`<div class="mcol-pay">
+      <div class="mtitle-row"><h3>支付</h3><span class="host-tag host-fly">▣ 飞来汇内嵌 iframe</span></div>
+      <div class="embed-frame"><div class="embed-tag">▣ FLYWAY EMBEDDED IFRAME · 合并卡 · 页内嵌入不跳转</div>${checkoutBody()}</div>
+      ${poweredBy()}
+    </div>`;
+  } else if(state.integration==='api'){
+    payInner=`<div class="mcol-pay">
+      <div class="mtitle-row"><h3>支付方式</h3><span class="host-tag host-mer">商户自绘 · 拆分卡 · 商户直接收卡号(PCI 最大)</span></div>
+      <div class="pm-card" style="padding:0">${pmList()}</div>
+      ${bigPayBtn()}
+      ${poweredBy()}
+    </div>`;
+  } else { // element
+    payInner=`<div class="mcol-pay">
+      <div class="mtitle-row"><h3>支付方式</h3><span class="host-tag host-fly">仅卡字段为飞来汇托管合并控件</span></div>
+      <div class="pm-card" style="padding:0">${pmList()}</div>
+      ${bigPayBtn()}
+      ${poweredBy()}
+    </div>`;
+  }
+  return merchantShell(payInner);
+}
+
+// 商户自有域名（模拟，非真实域名）
+function merchantDomain(){
+  const dmap={
+    WooCommerce:'shop.woocommerce-store.com', Shopyy:'store.shopyy-demo.com',
+    Shoplazza:'shop.shoplazza-demo.com', OpenCart:'shop.opencart-demo.com',
+    Magento2:'shop.magento-demo.com', Ueeshop:'shop.ueeshop-demo.com',
+    SelfHosted:'www.my-brand-store.com'
+  };
+  return dmap[bKey(state.builder)]||'shop.merchant-demo.com';
+}
+
+// 商户结账页外壳：模拟浏览器地址栏（商户域名）+ 商户页头 + 左支付 / 右订单摘要
+function merchantShell(payInner){
+  const name=state.builder.replace(/\(.*\)/,'');
+  return `<div class="mshell">
+    <div class="browser">
+      <div class="dots"><i></i><i></i><i></i></div>
+      <div class="url">🔒 <b>https://${merchantDomain()}</b>/checkout</div>
+      <span class="stay">● 始终停留在商户网站，未跳转</span>
+    </div>
+    <div class="mpage">
+      <div class="mhead">
+        <div class="mlogo">${name}</div>
+        <div class="mnav"><span>首页</span><span>全部商品</span><span>购物车</span></div>
+        <div class="secure">🔒 安全结账</div>
+      </div>
+      <div class="mbody">
+        ${payInner}
+        ${orderSummary()}
+      </div>
+    </div>
+  </div>`;
+}
+
+function orderSummary(){
+  const a=amountStr();
+  return `<div class="mcol-sum">
+    <h3>订单摘要</h3>
+    <div class="osum-item">
+      <div class="osum-thumb"><span class="qty">1</span></div>
+      <div class="nm">${T('shopTitle')}</div>
+      <div class="pr">${a.sym}${a.int}${a.dec}</div>
+    </div>
+    <div class="osum-line"><span>小计</span><span>${a.sym}${a.int}${a.dec}</span></div>
+    <div class="osum-line"><span>运费</span><span>免运费</span></div>
+    <div class="osum-total"><span>合计 ${a.code}</span><span>${a.sym}${a.int}${a.dec}</span></div>
+    <div class="muted" style="font-size:12px;margin-top:14px">付给：${CONFIG.merchantName}</div>
+  </div>`;
+}
+
+function poweredBy(){
+  return `<div class="powered">${flyLogoSVG(13)} · 您仍停留在本商户网站</div>`;
+}
+
+/* §A 收银台本体（跳转/内嵌按真实生产源码像素级复刻；api/element 复用金额卡 + 对应卡表单） */
+function checkoutBody(){
+  const a=amountStr();
+  const merchantHosted = state.integration==='redirect'||state.integration==='embedded';
+  return `<div class="co">
+    ${merchantHosted?`<div class="co-bar">
+      <div class="fly-logo">${flyLogoSVG(18)}</div>
+      <div class="lang">🌐 ${state.lang==='zh'?'中文':'English'} <span style="font-size:10px;color:#A5A4AA">▾</span></div>
+    </div>`:''}
+    <div class="order-box">
+      <div class="order-amount"><span class="cur">${a.code}</span><span class="num">${a.int}<i>.${a.dec.replace('.','')}</i></span></div>
+      <div class="order-detail"><div class="li"><span class="label">${T('payTo')}</span><span class="value">${CONFIG.merchantName}</span></div></div>
+    </div>
+    <div class="tabset">
+      <div class="pay-head">Payment</div>
+      ${pmList()}
+      <div class="pm-note">${T('paymentNote')}</div>
+      ${bigPayBtn()}
+    </div>
+    <div class="page-footer">
+      <div class="foot-title"><span class="line"></span><span class="text">🛡 ${T('shield')}</span><span class="line r"></span></div>
+      <div class="foot-item"><span class="pre">✓</span><span>${T('foot1')}</span></div>
+      <div class="foot-item"><span class="pre">✓</span><span>${T('foot2')}</span></div>
+      <div class="foot-item"><span class="pre">✓</span><span>${T('foot3')}</span></div>
+      <div class="certificate">
+        <span class="secbadge">PCI DSS</span><span class="secbadge">VISA Secure</span><span class="secbadge">Mastercard ID Check</span>
+        <span class="secbadge">Amex SafeKey</span><span class="secbadge">JCB</span><span class="secbadge">ProtectBuy</span>
+      </div>
+      <div class="foot-fine">To better serve you, we may use some of your information according to our Privacy and Cookie Policy.</div>
+      <div class="foot-links"><b>Powered by FlyPay</b> &nbsp;|&nbsp; Term of Use &nbsp;|&nbsp; Privacy Policy</div>
+    </div>
+  </div>`;
+}
+
+/* 支付方式单选列表（§A.2/§9；PIX/Boleto 按"买家地区"演示过滤，其余恒显示） */
+function pmList(){
+  // Element 目前仅支持：卡支付 / Apple Pay / Google Pay
+  const elementAllow=["card","applepay","googlepay"];
+  const list=CONFIG.paymentMethods.filter(pm=>{
+    if(state.integration==='element' && !elementAllow.includes(pm.id)) return false;
+    if(pm.region==='BR') return state.region==='BR';
+    return true;
+  });
+  // 若当前选中 PM 被过滤掉，回退到列表首项
+  if(!list.find(p=>p.id===state.selectedPM)) state.selectedPM=list[0]?.id;
+  const items=list.map(pm=>{
+    const sel=state.selectedPM===pm.id;
+    let icon='';
+    if(pm.id==='card') icon=`<span class="payment-icon">${cardIcon()}</span>`;
+    else if(pm.id==='boleto') icon=`<span class="payment-icon">${boletoIcon()}</span>`;
+    let sub='';
+    if(sel){
+      if(pm.type==='wallet'){
+        sub=`<div class="pm-content"><div class="wallet-hint">${T('walletSub').replace('{wallet}',pm.label)}</div></div>`;
+      } else if(pm.type==='card'){
+        sub=`<div class="pm-content">${cardForm()}</div>`;
+      } else if(pm.type==='lpm'){
+        sub=`<div class="pm-content"><div class="lpm-form">
+          <div class="lpm-field"><label>${T('pmName')}</label><input placeholder="Full name"></div>
+          <div class="lpm-field"><label>${T('pmEmail')}</label><input placeholder="name@example.com"></div>
+          <div class="lpm-field"><label>${T('pmCountry')}</label><input value="Brazil" readonly></div>
+        </div></div>`;
+      }
+    }
+    return `<div class="pm ${sel?'sel':''}" data-pm="${pm.id}">
+      <div class="payment-header">
+        <span class="el-rad"></span>
+        <div class="payment-content">${icon}<span class="pm-name">${pm.label}</span></div>
+      </div>
+      ${sub}
+    </div>`;
+  }).join('');
+  return `<div class="pm-list">${items}</div>`;
+}
+
+/* §5/§11 卡表单：combined（合并） vs split（拆分）两套，绝不混用 */
+function cardForm(){
+  const style=CONFIG.cardFieldStyle[state.integration];
+  if(style==='split'){
+    // API 直连：商户自绘 · 拆分卡（卡号 / MM/YY / CVV + 持卡人姓名）
+    return `<div class="lpm-form">
+      <div class="cg-row" style="gap:10px">
+        <div class="lpm-field" style="flex:1"><label>${T('lastName')}</label><input placeholder="${T('lastName')}"></div>
+        <div class="lpm-field" style="flex:1"><label>${T('firstName')}</label><input placeholder="${T('firstName')}"></div>
+      </div>
+      <div class="lpm-field"><label>${T('cardNum')}</label><input id="card-num" placeholder="4242 4242 4242 4242"></div>
+      <div class="cg-row" style="gap:10px">
+        <div class="lpm-field" style="flex:1"><label>${T('exp')} (MM/YY)</label><input placeholder="MM/YY"></div>
+        <div class="lpm-field" style="flex:1"><label>${T('cvv')}</label><input placeholder="CVV"></div>
+      </div>
+      <div class="pci-note">🔒 ${T('pciNote')}</div>
+    </div>`;
+  }
+  // combined：redirect/embedded/element 合并卡（§A.3 单个托管控件；卡号独占一行，MM/YY | CVV 第二行）
+  const elTag = state.integration==='element'
+    ? `<div class="cf-element-tag">▣ 飞来汇托管合并安全控件（卡号 + 有效期/CVC 同属一个组件，禁拆分为商户字段）</div>` : '';
+  return `<div class="field-label">Card information</div>
+  <div class="card-group">
+    <div class="cg-cell cg-num">
+      <input id="card-num" placeholder="1234 1234 1234 1234" inputmode="numeric">
+      <div class="brand-ico"><span>VISA</span><span>MC</span><span>AMEX</span></div>
+    </div>
+    <div class="cg-row">
+      <div class="cg-cell cg-exp"><input placeholder="MM / YY" inputmode="numeric"></div>
+      <div class="cg-cell"><input placeholder="CVV" inputmode="numeric"><span class="cvv-hint"></span></div>
+    </div>
+  </div>
+  ${elTag}`;
+}
+
+function bigPayBtn(){
+  const a=amountStr();
+  const pm=CONFIG.paymentMethods.find(p=>p.id===state.selectedPM);
+  let inner=`${T('pay')} ${a.code} ${a.int}${a.dec}`, cls='submit-btn';
+  if(pm&&pm.id==='googlepay'){ inner='G Pay'; cls='submit-btn gpay'; }
+  else if(pm&&pm.id==='applepay'){ inner=' Pay'; }
+  return `<div class="submit-box"><button class="${cls}" id="pay-btn">${inner}</button></div>`;
+}
+
+/* ---------- 商户视角（集成概览） ---------- */
+function merchantView(){
+  const iLabels={redirect:"跳转 Redirect",embedded:"内嵌 Embedded",api:"API 直连",element:"Element"};
+  const code=mockCode();
+  return `<div class="merch">
+    <h3>集成概览 · ${state.builder.replace(/\(.*\)/,'')} × ${iLabels[state.integration]}</h3>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h4>${T('merStep1Title')}</h4><p>${T('merStep1')}</p></div>
+      <div class="step"><div class="n">2</div><h4>${T('merStep2Title')}</h4><p>${T('merStep2')}</p></div>
+      <div class="step"><div class="n">3</div><h4>${T('merStep3Title')}</h4><p>${T('merStep3')}</p></div>
+    </div>
+    <div class="code-toggle" id="code-toggle">${state.codeOpen?'▾ '+T('hideCode'):'▸ '+T('showCode')}</div>
+    <pre class="code ${state.codeOpen?'open':''}">${code}</pre>
+    <div class="sdk-note">💡 ${T('sdkNote')}　｜　字段一律以 &lt;占位&gt;，以官方文档为准。</div>
+  </div>`;
+}
+
+// 禁编真实 API 字段名/域名/文档链接 —— 全部 <占位>
+function mockCode(){
+  const map={
+    redirect:`// 跳转 Redirect（合并卡 · 飞来汇托管）
+const order = await flyway.create({
+  amount: <占位>, currency: "<占位>",
+  return_url: "<占位>"            // 以官方文档为准
+});
+window.location.href = order.<占位_checkout_url>;`,
+    embedded:`// 内嵌 Embedded（合并卡 · iframe 不离站）
+flyway.embedded.mount("#checkout", {
+  client_secret: "<占位>",        // 以官方文档为准
+  appearance: { /* <占位> */ }
+});`,
+    api:`// API 直连（拆分卡 · 商户自绘 · PCI 范围最大）
+const res = await flyway.confirm({
+  number: "<占位>", exp: "<占位>", cvv: "<占位>",
+  holder: "<占位>"                 // 以官方文档为准
+});`,
+    element:`// Element（合并安全控件 · 仅卡字段托管）
+const card = flyway.elements.create("card"); // 合并控件，禁拆分
+card.mount("#card-element");
+await flyway.confirmCard(card, { /* <占位> */ });`
+  };
+  return map[state.integration];
+}
+
+/* ---------- §10 能力总览 ---------- */
+function overviewStage(){
+  return `<div class="overview">
+    ${matrixPanel()}
+    ${pmCoveragePanel()}
+    ${statsPanel()}
+  </div>`;
+}
+
+function matrixPanel(){
+  const cols=[["redirect","跳转"],["embedded","内嵌"],["api","API直连"],["element","Element"]];
+  const rows=CONFIG.builders.map(name=>{
+    const k=bKey(name); const s=CONFIG.support[k];
+    const cells=cols.map(([key])=>{
+      const v=s[key];
+      if(v===true) return `<td><span class="yes">✓</span></td>`;
+      if(v==="planned") return `<td><span class="planned">规划中</span></td>`;
+      return `<td><span class="no">✗</span></td>`;
+    }).join('');
+    return `<tr><td>${name}</td>${cells}</tr>`;
+  }).join('');
+  // 覆盖小结
+  const count=key=>CONFIG.builders.filter(n=>CONFIG.support[bKey(n)][key]===true).length;
+  const N=CONFIG.builders.length;
+  return `<div class="panel">
+    <h3>支持矩阵（${N} 工具 × 4 对接方式）</h3>
+    <table class="matrix">
+      <tr><th>建站工具</th><th>跳转</th><th>内嵌</th><th>API直连</th><th>Element</th></tr>
+      ${rows}
+    </table>
+    <div class="summary">覆盖小结：跳转 ${count('redirect')}/${N}、内嵌 ${count('embedded')}/${N}、API 直连 ${count('api')}/${N}、Element 0/${N}（仅 WooCommerce 规划中）。</div>
+    <div class="summary">注：Element 列禁止打实勾，仅 WooCommerce 标"规划中"（虚线/灰显），其余 ✗。</div>
+  </div>`;
+}
+
+function pmCoveragePanel(){
+  const items=["卡","Apple Pay","Google Pay","PayPal","PIX","iDEAL","MB WAY","OXXO","20+ LPM"];
+  return `<div class="panel">
+    <h3>支付方式覆盖</h3>
+    <div class="cov">${items.map(i=>`<span>${i}</span>`).join('')}</div>
+    <div class="summary">钱包三件套（Apple/Google Pay、PayPal）全露；Apple/Google Pay 提供 SDK 供商户集成；LPM 含 PIX/iDEAL/MB WAY/OXXO 等 20+ 本地支付方式。</div>
+  </div>`;
+}
+
+function statsPanel(){
+  const boxes=CONFIG.stats.map(s=>
+    `<div class="statbox"><div class="v">${s.v}</div><div class="k">${s.k} <span class="ph-tag">${T('phPlaceholder')}</span></div></div>`).join('');
+  return `<div class="panel">
+    <h3>卖点数字 <span class="ph-tag">占位待替换</span></h3>
+    <div class="stat">${boxes}</div>
+    <div class="summary">以上数字均为占位演示值，非真实统计，正式版需替换。</div>
+  </div>`;
+}
+
+/* ---------- 导演控制台 ---------- */
+function renderConsole(){
+  const root=document.getElementById('console-root');
+  const iLabels={redirect:"跳转",embedded:"内嵌",api:"API",element:"Element"};
+  root.innerHTML=`<div class="console ${state.consoleCollapsed?'collapsed':''}">
+    <div class="console-head" id="console-head">🎬 导演控制台 <span>${state.consoleCollapsed?'▸':'▾'}</span></div>
+    <div class="console-body">
+      <div class="cg"><label>强制结果</label><div class="cbtns">
+        <button class="cbtn ${state.force==='success'?'active':''}" data-force="success">成功</button>
+        <button class="cbtn ${state.force==='fail'?'active':''}" data-force="fail">失败</button>
+        <button class="cbtn ${state.force==='3ds'?'active':''}" data-force="3ds">触发 3DS</button>
+      </div></div>
+      <div class="cg"><label>3DS 开关（独立）</label>
+        <div class="switch"><div class="toggle ${state.tds3on?'on':''}" id="tds3-toggle"></div><span>${state.tds3on?'开启':'关闭'}</span></div>
+      </div>
+      <div class="cg"><label>对接方式</label>
+        <select class="csel" id="c-int">
+          ${CONFIG.integrations.map(i=>`<option value="${i}" ${state.integration===i?'selected':''}>${iLabels[i]}</option>`).join('')}
+        </select>
+      </div>
+      <div class="cg"><label>建站工具</label>
+        <select class="csel" id="c-builder">
+          ${CONFIG.builders.map(b=>`<option value="${b}" ${state.builder===b?'selected':''}>${b}</option>`).join('')}
+        </select>
+      </div>
+      <div class="cg"><label>币种 / 买家地区</label>
+        <div style="display:flex;gap:6px">
+          <select class="csel" id="c-cur" style="flex:1">${CONFIG.currencies.map(c=>`<option value="${c.code}" ${state.currency===c.code?'selected':''}>${c.code}</option>`).join('')}</select>
+          <select class="csel" id="c-region" style="flex:1">${CONFIG.regions.map(r=>`<option value="${r.code}" ${state.region===r.code?'selected':''}>${r.name}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="cg"><label>语言 / 设备</label>
+        <div style="display:flex;gap:6px">
+          <select class="csel" id="c-lang" style="flex:1"><option value="zh" ${state.lang==='zh'?'selected':''}>中文</option><option value="en" ${state.lang==='en'?'selected':''}>English</option></select>
+          <select class="csel" id="c-device" style="flex:1"><option value="desktop" ${state.device==='desktop'?'selected':''}>桌面</option><option value="phone" ${state.device==='phone'?'selected':''}>手机</option></select>
+        </div>
+      </div>
+      <button class="cbtn creset" id="c-reset">↺ 一键重置</button>
+    </div>
+  </div>`;
+  bindConsole();
+}
+
+/* ---------- 弹层 / 状态机 ---------- */
+function renderOverlay(){
+  const root=document.getElementById('overlay-root');
+  if(!state.overlay){root.innerHTML='';return;}
+  let html='';
+  if(state.overlay==='processing'){
+    html=`<div class="modal"><div class="spinner"></div><h3>${T('processing')}</h3></div>`;
+  } else if(state.overlay==='tds3-loading'){
+    html=`<div class="modal"><div class="spinner"></div><h3>${T('tds3Title')}</h3><p>${T('tds3Desc')}</p></div>`;
+  } else if(state.overlay==='tds3-verify'){
+    html=`<div class="modal">
+      <div class="tds-bar">🔐 ${T('tds3Verify')}</div>
+      <div class="spinner"></div>
+      <p>模拟银行 3DS 校验页（OTP）…</p>
+      <div class="acts">
+        <button class="btn-ghost" id="tds3-leave-btn">${T('leave')}</button>
+        <button class="btn-primary" id="tds3-complete">${T('continue')}</button>
+      </div>
+    </div>`;
+  } else if(state.overlay==='tds3-leave'){
+    html=`<div class="modal">
+      <div class="ic info">!</div>
+      <h3>${T('tds3Leave')}</h3><p>${T('tds3LeaveDesc')}</p>
+      <div class="acts">
+        <button class="btn-ghost" id="tds3-confirm-leave">${T('leave')}</button>
+        <button class="btn-primary" id="tds3-stay">${T('stay')}</button>
+      </div>
+    </div>`;
+  } else if(state.overlay==='success'){
+    html=`<div class="modal">
+      <div class="ic ok">✓</div>
+      <h3>${T('successTitle')}</h3><p>${T('successDesc')}</p>
+      <div class="acts"><button class="btn-primary" id="ov-back">${T('backShop')}</button></div>
+    </div>`;
+  } else if(state.overlay==='fail'){
+    const reason=FAIL_REASONS[state.lang][0]; // 占位取第一条
+    html=`<div class="modal">
+      <div class="ic err">✕</div>
+      <h3>${T('failTitle')}</h3><p>${reason}</p>
+      <div class="acts">
+        <button class="btn-ghost" id="ov-close">${T('close')}</button>
+        <button class="btn-primary" id="ov-retry">${T('retry')}</button>
+      </div>
+    </div>`;
+  }
+  root.innerHTML=`<div class="overlay">${html}</div>`;
+  bindOverlay();
+}
+
+/* ============================================================
+   事件绑定
+   ============================================================ */
+function bindApp(){
+  document.querySelectorAll('[data-mode]').forEach(el=>el.onclick=()=>{state.mode=el.dataset.mode;render();});
+  document.querySelectorAll('[data-lang]').forEach(el=>el.onclick=()=>{state.lang=el.dataset.lang;render();});
+  document.querySelectorAll('[data-device]').forEach(el=>el.onclick=()=>{state.device=el.dataset.device;render();});
+  document.querySelectorAll('[data-builder]').forEach(el=>el.onclick=()=>{state.builder=el.dataset.builder;state.flow='shop';render();});
+  document.querySelectorAll('[data-int]').forEach(el=>el.onclick=()=>{state.integration=el.dataset.int;state.flow='shop';render();});
+  document.querySelectorAll('[data-persp]').forEach(el=>el.onclick=()=>{state.perspective=el.dataset.persp;render();});
+  const cc=document.getElementById('sel-region'); if(cc) cc.onchange=()=>{state.region=cc.value;render();};
+  const sc=document.getElementById('sel-cur'); if(sc) sc.onchange=()=>{state.currency=sc.value;render();};
+
+  const go=document.getElementById('go-checkout');
+  if(go) go.onclick=startCheckout;
+  document.querySelectorAll('[data-pm]').forEach(el=>el.onclick=()=>{state.selectedPM=el.dataset.pm;render();});
+  const pay=document.getElementById('pay-btn'); if(pay) pay.onclick=submitPay;
+  const ct=document.getElementById('code-toggle'); if(ct) ct.onclick=()=>{state.codeOpen=!state.codeOpen;render();};
+}
+
+// 进入收银台：跳转方式先走整页过渡动画
+function startCheckout(){
+  if(state.integration==='redirect'){
+    state.flow='redirecting'; render();
+    setTimeout(()=>{state.flow='checkout';render();},1300);
+  } else {
+    state.flow='checkout'; render();
+  }
+}
+
+// 提交支付 → 测试卡校验 → 状态机
+function submitPay(){
+  // 仅卡支付校验测试卡号
+  const pm=CONFIG.paymentMethods.find(p=>p.id===state.selectedPM);
+  if(pm && pm.type==='card'){
+    const inp=document.getElementById('card-num');
+    const val=inp?inp.value.replace(/\s/g,''):'';
+    if(val && val!=='4242424242424242'){
+      alert(T('testCardTip')); return;
+    }
+  }
+  runStateMachine();
+}
+
+function runStateMachine(){
+  const result=state.force;
+  if(result==='3ds' && state.tds3on){
+    // 3DS 三段：loading 提示 → 校验页 →（离开挽留）→ 完成
+    state.overlay='tds3-loading'; render();
+    setTimeout(()=>{state.overlay='tds3-verify';render();},1200);
+    return;
+  }
+  // 成功/失败（含 3DS 但开关关闭时跳过直接走结果）
+  state.overlay='processing'; render();
+  setTimeout(()=>{
+    state.overlay = result==='fail' ? 'fail' : 'success';
+    render();
+  },1100);
+}
+
+function bindOverlay(){
+  const back=document.getElementById('ov-back');
+  if(back) back.onclick=()=>{state.overlay=null;state.flow='shop';render();};
+  const close=document.getElementById('ov-close');
+  if(close) close.onclick=()=>{state.overlay=null;render();};
+  const retry=document.getElementById('ov-retry');
+  if(retry) retry.onclick=()=>{state.overlay=null;render();setTimeout(submitPay,50);};
+  // 3DS 校验页：点完成 → 处理 → 成功；点离开 → 挽留
+  const comp=document.getElementById('tds3-complete');
+  if(comp) comp.onclick=()=>{
+    state.overlay='processing'; render();
+    setTimeout(()=>{state.overlay = state.force==='fail'?'fail':'success';render();},1000);
+  };
+  const leave=document.getElementById('tds3-leave-btn');
+  if(leave) leave.onclick=()=>{state.overlay='tds3-leave';render();};
+  const stay=document.getElementById('tds3-stay');
+  if(stay) stay.onclick=()=>{state.overlay='tds3-verify';render();};
+  const confLeave=document.getElementById('tds3-confirm-leave');
+  if(confLeave) confLeave.onclick=()=>{state.overlay=null;render();};
+}
+
+function bindConsole(){
+  const head=document.getElementById('console-head');
+  if(head) head.onclick=()=>{state.consoleCollapsed=!state.consoleCollapsed;render();};
+  document.querySelectorAll('[data-force]').forEach(el=>el.onclick=()=>{state.force=el.dataset.force;render();});
+  const tg=document.getElementById('tds3-toggle');
+  if(tg) tg.onclick=()=>{state.tds3on=!state.tds3on;render();};
+  const ci=document.getElementById('c-int'); if(ci) ci.onchange=()=>{state.integration=ci.value;state.flow='shop';render();};
+  const cb=document.getElementById('c-builder'); if(cb) cb.onchange=()=>{state.builder=cb.value;state.flow='shop';render();};
+  const ccur=document.getElementById('c-cur'); if(ccur) ccur.onchange=()=>{state.currency=ccur.value;render();};
+  const ccty=document.getElementById('c-region'); if(ccty) ccty.onchange=()=>{state.region=ccty.value;render();};
+  const cl=document.getElementById('c-lang'); if(cl) cl.onchange=()=>{state.lang=cl.value;render();};
+  const cd=document.getElementById('c-device'); if(cd) cd.onchange=()=>{state.device=cd.value;render();};
+  const cr=document.getElementById('c-reset'); if(cr) cr.onclick=resetAll;
+}
+
+function resetAll(){
+  Object.assign(state,{
+    mode:"experience",builder:"WooCommerce",integration:"redirect",perspective:"buyer",
+    lang:"zh",device:"desktop",currency:"USD",region:"BR",flow:"shop",
+    selectedPM:"googlepay",force:"success",tds3on:true,overlay:null,codeOpen:false
+  });
+  render();
+}
+
+/* ---------- 内联 SVG ---------- */
+function flySVG(s){
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="fg" x1="0" y1="0" x2="24" y2="24">
+      <stop offset="0" stop-color="#6366F1"/><stop offset="1" stop-color="#1B2559"/>
+    </linearGradient></defs>
+    <path d="M2 3 L22 11 L12 13 L9 22 L7 14 Z" fill="url(#fg)"/>
+  </svg>`;
+}
+function tick(){
+  return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6 L9 17 L4 12" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+// 真实 flyway 头部 logo（从生产源码头部 SVG 原样抠出：字形 #5548FF + 纸飞机渐变，§A.2）
+function flyLogoSVG(h){
+  return `<svg height="${h}" viewBox="32 15 125 31" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="flyway">
+    <defs><linearGradient id="fwPlane" x1="55.3281" y1="32.0311" x2="40.878" y2="19.0172" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5548FF"></stop><stop offset="0.14" stop-color="#5548FF"></stop><stop offset="0.32" stop-color="#5060E6" stop-opacity="0.99"></stop><stop offset="0.53" stop-color="#557EEC" stop-opacity="0.98"></stop><stop offset="0.75" stop-color="#5CA8F4" stop-opacity="0.97"></stop><stop offset="0.99" stop-color="#65DEFE" stop-opacity="0.95"></stop><stop offset="1" stop-color="#66E0FF" stop-opacity="0.95"></stop></linearGradient></defs>
+    <path d="M139.46 24.0842H136.154C135.935 24.0842 135.759 24.2608 135.759 24.4797V25.7277L135.302 25.3439C133.988 24.2466 132.418 23.665 130.758 23.665C126.694 23.665 123.385 27.1852 123.385 31.5153C123.385 35.8454 126.691 39.3655 130.758 39.3655C132.418 39.3655 133.991 38.7862 135.302 37.6866L135.759 37.3052V38.5531C135.759 38.7721 135.935 38.9487 136.154 38.9487H139.46C139.679 38.9487 139.856 38.7721 139.856 38.5531V24.4797C139.856 24.2608 139.679 24.0842 139.46 24.0842ZM131.462 35.73C129.267 35.73 127.48 33.8392 127.48 31.5153C127.48 29.1913 129.265 27.3005 131.462 27.3005C133.659 27.3005 135.443 29.1913 135.443 31.5153C135.443 33.8392 133.659 35.73 131.462 35.73Z" fill="#5548FF"></path>
+    <path d="M80.6378 16.5H83.7317C83.9507 16.5 84.1273 16.6766 84.1273 16.8956V38.5508C84.1273 38.7697 83.9507 38.9463 83.7317 38.9463H80.6378C80.4188 38.9463 80.2422 38.7697 80.2422 38.5508V16.8956C80.2422 16.6766 80.4188 16.5 80.6378 16.5Z" fill="#5548FF"></path>
+    <path d="M77.1294 16.5H74.8572C71.914 16.5 69.5288 18.8852 69.5288 21.8284V24.0841H67.0235C66.8045 24.0841 66.6279 24.2607 66.6279 24.4797V27.2322C66.6279 27.4512 66.8045 27.6278 67.0235 27.6278H69.5288V38.5555C69.5288 38.7745 69.7054 38.951 69.9244 38.951H73.2326C73.4515 38.951 73.6281 38.7745 73.6281 38.5555V27.6278H77.1271C77.346 27.6278 77.5226 27.4512 77.5226 27.2322V24.4797C77.5226 24.2607 77.346 24.0841 77.1271 24.0841H73.6281V21.8284C73.6281 21.1503 74.1768 20.6017 74.8549 20.6017H76.4536C76.642 20.6017 76.8045 20.4698 76.8398 20.2862L77.5132 16.9756C77.5674 16.7284 77.379 16.5 77.1294 16.5Z" fill="#5548FF"></path>
+    <path d="M118.589 24.3926L116.232 34.88L113.501 24.3785C113.456 24.2042 113.298 24.0818 113.117 24.0818H110.845C110.666 24.0818 110.508 24.2042 110.461 24.3785L107.73 34.88L105.373 24.3926C105.333 24.2113 105.173 24.0841 104.987 24.0841H101.772C101.511 24.0841 101.323 24.3314 101.391 24.5833L105.198 38.6567C105.246 38.8286 105.401 38.9487 105.58 38.9487H109.889C110.075 38.9487 110.237 38.8168 110.275 38.6355L111.977 30.5828L113.68 38.6355C113.717 38.8192 113.88 38.9487 114.066 38.9487H118.375C118.554 38.9487 118.709 38.8286 118.756 38.6567L122.564 24.5833C122.632 24.3314 122.441 24.0841 122.182 24.0841H118.966C118.78 24.0841 118.62 24.2113 118.58 24.3926H118.589Z" fill="#5548FF"></path>
+    <path d="M99.199 24.0818H96.0014C95.8272 24.0818 95.6718 24.1972 95.6223 24.3643L92.9122 33.559L90.2021 24.3643C90.1526 24.1972 89.9972 24.0818 89.823 24.0818H86.6254C86.3547 24.0818 86.1639 24.3479 86.2511 24.6045L90.8778 38.2564L88.7587 44.4773C88.6716 44.7339 88.8623 45 89.1331 45H92.3424C92.5119 45 92.6626 44.8917 92.7168 44.7316L94.6899 38.9346L99.5686 24.6045C99.6558 24.3479 99.465 24.0818 99.1943 24.0818H99.199Z" fill="#5548FF"></path>
+    <path d="M154.61 24.0818H151.412C151.238 24.0818 151.082 24.1972 151.033 24.3643L148.323 33.559L145.613 24.3643C145.563 24.1972 145.408 24.0818 145.234 24.0818H142.036C141.765 24.0818 141.575 24.3479 141.662 24.6045L146.288 38.2564L144.169 44.4773C144.082 44.7339 144.273 45 144.544 45H147.753C147.923 45 148.073 44.8917 148.127 44.7316L150.101 38.9346L154.979 24.6045C155.066 24.3479 154.876 24.0818 154.605 24.0818H154.61Z" fill="#5548FF"></path>
+    <path d="M35.2199 23.5804C35.0692 23.9807 35.1257 24.4304 35.373 24.7813L38.7589 29.5893L33.6565 32.2383C33.2444 32.4525 32.983 32.8552 32.9595 33.319C32.936 33.7829 33.1526 34.2114 33.5387 34.4657L45.307 42.2029C45.6272 42.4125 45.9969 42.509 46.3807 42.4855C46.9199 42.4501 47.4073 42.177 47.7181 41.7296C47.7228 41.7226 47.7275 41.7179 47.7299 41.7131L63.1218 18.3014C63.7011 17.4208 62.9029 16.2882 61.8786 16.5355L36.1241 22.7799C35.7073 22.8811 35.3706 23.1801 35.2176 23.5804H35.2199ZM46.5149 40.9032C46.4254 41.0327 46.2418 41.0656 46.1099 40.9832L34.5842 33.4014L60.181 20.1215L46.5173 40.9032H46.5149ZM60.2704 18.4286L40.0515 28.9183L36.6821 24.1479L60.2704 18.4286Z" fill="url(#fwPlane)"></path>
+  </svg>`;
+}
+// Boleto 图标（条形码风格，非敏感，照真源码抠出）
+function boletoIcon(){
+  return `<svg width="26" height="20" viewBox="0 0 28 20" fill="#171717"><rect x="1" y="2" width="1.6" height="16"></rect><rect x="4" y="2" width="1" height="16"></rect><rect x="6.5" y="2" width="2" height="16"></rect><rect x="10" y="2" width="1" height="16"></rect><rect x="12.5" y="2" width="2.4" height="16"></rect><rect x="16.5" y="2" width="1" height="16"></rect><rect x="19" y="2" width="1.6" height="16"></rect><rect x="22" y="2" width="1" height="16"></rect><rect x="24.5" y="2" width="2" height="16"></rect></svg>`;
+}
+// Card 图标（通用卡面，非品牌专属，照真源码等价占位）
+function cardIcon(){
+  return `<svg width="28" height="20" viewBox="0 0 28 20" fill="none"><rect x="0.25" y="0.25" width="27.5" height="19.5" rx="1.75" fill="#EBF1FA" stroke="#CCCCCC" stroke-width="0.5"/><rect y="4" width="28" height="4" fill="#171717"/><rect x="18" y="13" width="7" height="3" rx="0.5" fill="#171717"/></svg>`;
+}
+
+/* 启动 */
+render();
+</script>
+</body>
+</html>
