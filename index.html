@@ -135,10 +135,14 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .embed-tag{font-size:11px;color:var(--accent);font-weight:700;padding:4px 8px}
 
 .co{background:transparent}
-.co-bar{background:#fff;border-radius:14px 14px 0 0;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
-.co-bar .lang{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-secondary);font-weight:500;cursor:pointer;border:1px solid #D2D1D8;background:#fff;border-radius:20px;padding:6px 12px}
-.fly-logo{display:flex;align-items:center}
-.fly-logo svg{display:block}
+/* ===== 托管收银台"整页"外壳（灰底 + 全宽白头 + 居中内容列，照真实生产 §A.2） ===== */
+.cashier{background:var(--bg);border-radius:14px;overflow:hidden}
+.ck-header{background:#fff;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;box-shadow:inset 0 -1px #e5e5e5}
+.ck-logo{height:30px;display:flex;align-items:center}
+.ck-logo svg{height:30px;display:block}
+.ck-lang{display:flex;align-items:center;gap:5px;font-size:14px;color:var(--text-secondary);font-weight:500;cursor:pointer;border:1px solid #D2D1D8;background:#fff;border-radius:20px;padding:6px 12px}
+.ck-main{max-width:574px;margin:0 auto;padding:12px 12px 40px}
+@media(max-width:640px){.ck-header{padding:0 16px}}
 
 /* ===== §A.2 order-box（金额卡：C 金额 / B 付给） ===== */
 .order-box{background:#fff;border-radius:var(--card-radius);padding:32px;text-align:left}
@@ -699,12 +703,12 @@ function poweredBy(){
 /* §A 收银台本体（跳转/内嵌按真实生产源码像素级复刻；api/element 复用金额卡 + 对应卡表单） */
 function checkoutBody(){
   const a=amountStr();
-  const merchantHosted = state.integration==='redirect'||state.integration==='embedded';
-  return `<div class="co">
-    ${merchantHosted?`<div class="co-bar">
-      <div class="fly-logo">${flyLogoSVG(18)}</div>
-      <div class="lang"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#5548FF" stroke-width="1.6"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" stroke="#5548FF" stroke-width="1.6"/></svg> ${state.lang==='zh'?'中文':'English'} <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#A5A4AA" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    </div>`:''}
+  return `<div class="cashier">
+    <header class="ck-header">
+      <span class="ck-logo">${flyLogoSVG(30)}</span>
+      <div class="ck-lang"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#5548FF" stroke-width="1.6"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" stroke="#5548FF" stroke-width="1.6"/></svg> ${state.lang==='zh'?'中文':'English'} <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#A5A4AA" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </header>
+    <div class="ck-main">
     <div class="order-box">
       <div class="order-amount"><span class="cur">${a.code}</span><span class="num">${a.int}<i>.${a.dec.replace('.','')}</i></span></div>
       <div class="order-detail"><div class="li"><span class="label">${T('payTo')}</span><span class="value">${CONFIG.merchantName}</span></div></div>
@@ -728,6 +732,7 @@ function checkoutBody(){
       <div class="certificate"><img class="cert-badges" src="${ICONS.certBadges}" alt="VISA Secure · Discover · Diners Club · ProtectBuy · Mastercard ID Check · PCI DSS · Amex SafeKey · JCB J/Secure"></div>
       <div class="foot-fine">To better serve you, we may use some of your information according to our Privacy and Cookie Policy.</div>
       <div class="foot-links"><b>Powered by FlyPay</b> &nbsp;|&nbsp; Term of Use &nbsp;|&nbsp; Privacy Policy</div>
+    </div>
     </div>
   </div>`;
 }
