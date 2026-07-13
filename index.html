@@ -181,8 +181,10 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .cards .card-img{height:20px;width:auto;display:block;border-radius:3px}
 .pm-content{display:none;margin-top:10px}
 .pm.sel .pm-content{display:block}
-.wallet-hint{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:var(--radius-m);padding:14px 16px;color:var(--accent);line-height:20px;font-size:14px}
+.wallet-hint{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:var(--radius-m);padding:14px 16px;color:var(--text-muted);line-height:20px;font-size:14px}
 .wallet-hint svg.wtip{flex:0 0 auto;width:46px;height:auto;display:block}
+.wtip-lead{color:var(--accent)}       /* 前半句（含钱包名）紫色 */
+.wtip-tail{color:var(--text-muted)}   /* 后半句灰色 */
 .wallet-hint b{color:var(--accent);font-weight:600}
 .pm-note{color:var(--text-muted);font-size:12px;line-height:18px;margin-top:14px;text-align:center}
 
@@ -405,7 +407,7 @@ const CONFIG = {
       cardNum:"卡号", exp:"有效期", cvv:"CVV", cardName:"持卡人",
       firstName:"名", lastName:"姓",
       pciNote:"Card information is guaranteed to be safe according to PCI DSS standards",
-      walletSub:"请点击支付按钮，并在 {wallet} 的支付页面完成支付。",
+      walletSubLead:"请点击支付按钮，并在 {wallet}", walletSubTail:" 的支付页面完成支付。",
       pmName:"Name", pmEmail:"Email", pmCountry:"Country and regions",
       paymentNote:"实际展示支付方式以商户开通支付方式为准",
       cardInfo:"卡片信息", expMMYY:"月/年",
@@ -440,7 +442,7 @@ const CONFIG = {
       cardNum:"Card number", exp:"Expiry", cvv:"CVV", cardName:"Cardholder",
       firstName:"First name", lastName:"Last name",
       pciNote:"Card information is guaranteed to be safe according to PCI DSS standards",
-      walletSub:"Please click the button and finish payment on the {wallet} page",
+      walletSubLead:"Please click the pay button and complete the payment on {wallet}", walletSubTail:"'s payment page.",
       pmName:"Name", pmEmail:"Email", pmCountry:"Country and regions",
       paymentNote:"Actual methods shown depend on the merchant's enabled options.",
       cardInfo:"Card information", expMMYY:"MM / YY",
@@ -760,7 +762,7 @@ function pmList(){
     let sub='';
     if(sel){
       if(pm.type==='wallet'){
-        sub=`<div class="pm-content"><div class="wallet-hint">${walletTipIcon()}<span>${T('walletSub').replace('{wallet}',`<b>${pm.label}</b>`)}</span></div></div>`;
+        sub=`<div class="pm-content"><div class="wallet-hint">${walletTipIcon()}<span><span class="wtip-lead">${T('walletSubLead').replace('{wallet}',`<b>${pm.label}</b>`)}</span><span class="wtip-tail">${T('walletSubTail')}</span></span></div></div>`;
       } else if(pm.type==='card'){
         sub=`<div class="pm-content">${cardForm()}</div>`;
       } else if(pm.type==='lpm'){
