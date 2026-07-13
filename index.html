@@ -179,6 +179,7 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 /* Card 行卡组织 logo 条（照真源码 .cards）*/
 .cards{display:flex;gap:4px;align-items:center;margin-left:auto;flex:0 0 auto}
 .cards .card-img{height:20px;width:auto;display:block;border-radius:3px}
+.brand-ico .card-img{height:18px}
 .pm-content{display:none;margin-top:10px}
 .pm.sel .pm-content{display:block}
 .wallet-hint{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:var(--radius-m);padding:14px 16px;color:var(--text-muted);line-height:20px;font-size:14px}
@@ -190,7 +191,8 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 
 /* 合并卡表单（§A.3：卡号独占一行 + MM/YY | CVV 第二行） */
 .field-label{color:var(--text-secondary);font-weight:500;margin:2px 0 8px}
-.card-group{border:1px solid var(--line-regular);border-radius:var(--radius-m);overflow:hidden}
+.card-group{border:1px solid var(--line-regular);border-radius:var(--radius-m);overflow:hidden;transition:border-color .12s}
+.card-group:focus-within{border-color:var(--accent)}   /* 聚焦时合并框边框变紫 */
 .cg-row{display:flex}
 .cg-cell{display:flex;align-items:center;padding:0 12px;height:48px;flex:1;min-width:0}
 .cg-cell input{border:none;outline:none;height:100%;width:100%;font-size:14px;background:transparent;color:var(--text)}
@@ -198,7 +200,7 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .cg-num{border-bottom:1px solid var(--line-regular)}
 .cg-exp{border-right:1px solid var(--line-regular)}
 .brand-ico{display:flex;gap:3px;align-items:center;flex:0 0 auto;margin-left:8px}
-.brand-ico img{height:18px;width:auto;display:block;border-radius:3px}
+.brand-ico img,.brand-ico svg{height:18px;width:auto;display:block;border-radius:3px}
 .cvv-ico{flex:0 0 auto;margin-left:6px;display:flex;align-items:center}
 .cvv-ico img{height:16px;width:auto;display:block}
 .cf-element-tag{font-size:10px;color:var(--accent);font-weight:700;margin-top:6px}
@@ -412,7 +414,7 @@ const CONFIG = {
       pciNote:"Card information is guaranteed to be safe according to PCI DSS standards",
       walletSubLead:"请点击支付按钮，并在 {wallet}", walletSubTail:" 的支付页面完成支付。",
       cardLabel:"信用卡",
-      pmName:"Name", pmEmail:"Email", pmCountry:"Country and regions",
+      pmName:"姓名", pmEmail:"电子邮件", pmCountry:"国家和地区",
       paymentNote:"实际展示支付方式以商户开通支付方式为准",
       cardInfo:"卡片信息", expMMYY:"月/年",
       successTitle:"支付成功", successDesc:"您的演示订单已完成（模拟）。",
@@ -764,8 +766,8 @@ function pmList(){
     const icon=`<span class="payment-icon">${pmIcon(pm.id)}</span>`;
     // Card 名称本地化（中文=信用卡），其余为品牌名不翻译
     const pmLabel = pm.id==='card' ? T('cardLabel') : pm.label;
-    // Card 行：名称后跟真实卡组织 logo 条（照真源码 payment-content > cards）
-    const brands = pm.id==='card' ? cardBrandsStrip() : '';
+    // Card 行卡组织 logo：仅"未选中"时显示在收起行右侧；选中后 logo 移到卡号框内
+    const brands = (pm.id==='card' && !sel) ? cardBrandsStrip() : '';
     let sub='';
     if(sel){
       if(pm.type==='wallet'){
@@ -817,9 +819,7 @@ function cardForm(){
   <div class="card-group">
     <div class="cg-cell cg-num">
       <input id="card-num" placeholder="1234 1234 1234 1234" inputmode="numeric">
-      <div class="brand-ico">
-        <img src="${ICONS.brand_visa}" alt=""><img src="${ICONS.brand_mc}" alt=""><img src="${ICONS.brand_amex}" alt="">
-      </div>
+      <div class="brand-ico">${cardBrandImgs()}</div>
     </div>
     <div class="cg-row">
       <div class="cg-cell cg-exp"><input placeholder="${T('expMMYY')}" inputmode="numeric"></div>
@@ -1204,13 +1204,12 @@ function boletoIcon(){
   return `<svg class="pm-ico" width="28" height="20" viewBox="0 0 28 20" fill="none"><rect x="0.25" y="0.25" width="27.5" height="19.5" rx="1.75" fill="#fff" stroke="#CCCCCC" stroke-width="0.5"/><g fill="#171717"><rect x="3" y="4" width="1.4" height="12"/><rect x="5.6" y="4" width="0.8" height="12"/><rect x="7.6" y="4" width="1.8" height="12"/><rect x="10.6" y="4" width="0.8" height="12"/><rect x="12.6" y="4" width="2" height="12"/><rect x="16" y="4" width="0.8" height="12"/><rect x="18" y="4" width="1.4" height="12"/><rect x="20.6" y="4" width="0.8" height="12"/><rect x="22.6" y="4" width="2" height="12"/></g></svg>`;
 }
 // 卡组织 logo 条（真实生产 data-URI：VISA / Mastercard / Amex / JCB）
+// 4 个卡组织 logo（VISA/MC/AMEX/Discover），行头与卡号框内共用
+function cardBrandImgs(){
+  return `<img class="card-img" src="${ICONS.brand_visa}" alt="VISA"><img class="card-img" src="${ICONS.brand_mc}" alt="Mastercard"><img class="card-img" src="${ICONS.brand_amex}" alt="Amex">${brandDiscover()}`;
+}
 function cardBrandsStrip(){
-  return `<div class="cards">
-    <img class="card-img" src="${ICONS.brand_visa}" alt="VISA">
-    <img class="card-img" src="${ICONS.brand_mc}" alt="Mastercard">
-    <img class="card-img" src="${ICONS.brand_amex}" alt="Amex">
-    ${brandDiscover()}
-  </div>`;
+  return `<div class="cards">${cardBrandImgs()}</div>`;
 }
 // Discover 卡组织 logo（DISC○VER，橙色球替代 O，卡片风格与其它一致）
 function brandDiscover(){
