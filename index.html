@@ -93,6 +93,14 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .fake-url{background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 12px;
   font-size:12px;color:var(--text-muted);margin-bottom:14px;display:flex;align-items:center;gap:6px}
 .fake-url b{color:#16A34A}
+/* §8 ABCD 模块显隐控制条（演示控件，非收银台本体） */
+.abcd-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#1E293B;color:#E2E8F0;border-radius:10px;padding:9px 14px;margin-bottom:12px}
+.abcd-title{font-size:12px;font-weight:600;color:#94A3B8}
+.abcd-toggles{display:flex;gap:6px;flex-wrap:wrap}
+.abcd-toggle{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 10px;border-radius:7px;background:#334155;color:#CBD5E1}
+.abcd-toggle .abcd-dot{width:8px;height:8px;border-radius:50%;background:#64748B}
+.abcd-toggle.on{background:var(--accent);color:#fff}
+.abcd-toggle.on .abcd-dot{background:#fff}
 .embed-frame{border:2px dashed var(--accent);border-radius:14px;padding:4px;background:var(--accent-soft)}
 
 /* 商户自有结账页外壳（内嵌/API直连/Element 用，表明不离站） */
@@ -229,7 +237,7 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .foot-title .line{flex:1;height:1px;background:linear-gradient(90deg,rgba(217,217,217,0),#d9d9d9)}
 .foot-title .line.r{background:linear-gradient(270deg,rgba(217,217,217,0),#d9d9d9)}
 .foot-title .text{flex-shrink:0;display:flex;align-items:center;gap:6px}
-.foot-item{display:flex;align-items:flex-start;justify-content:center;gap:8px;color:var(--text-muted);line-height:20px;margin:4px 0}
+.foot-item{display:flex;align-items:flex-start;justify-content:flex-start;gap:8px;color:var(--text-muted);line-height:20px;margin:4px 0}
 .foot-item .pre{color:var(--success);flex:0 0 auto;padding-top:2px}
 .certificate{display:flex;justify-content:center;padding:14px 0 6px}
 .cert-badges{width:100%;max-width:480px;height:auto;display:block}  /* 真实认证徽标（无白框）：VISA Secure/Discover/Diners/ProtectBuy/MC ID Check/PCI DSS/Amex SafeKey/JCB */
@@ -408,6 +416,8 @@ const CONFIG = {
       foot1:"FlyPay 保护您的隐私安全，并遵循 PCI DSS 安全标准",
       foot2:"所有数据均已加密，信息安全有保障",
       foot3:"我们绝不会泄露您的个人信息",
+      footFine:"为了给您提供更好的服务，我们可能会依据《隐私与 Cookie 政策》使用您的部分信息。",
+      footLinks:"<b>由 FlyPay 提供技术支持</b> &nbsp;|&nbsp; 使用条款 &nbsp;|&nbsp; 隐私政策",
       shield:"您的付款由 FlyPay 提供安全保障",
       cardNum:"卡号", exp:"有效期", cvv:"CVV", cardName:"持卡人",
       firstName:"名", lastName:"姓",
@@ -444,6 +454,8 @@ const CONFIG = {
       foot1:"FlyPay protects your privacy and follows PCI DSS security standards.",
       foot2:"All data is encrypted, information is secure.",
       foot3:"We will never disclose your personal information.",
+      footFine:"To better serve you, we may use some of your information according to our Privacy and Cookie Policy.",
+      footLinks:"<b>Powered by FlyPay</b> &nbsp;|&nbsp; Term of Use &nbsp;|&nbsp; Privacy Policy",
       shield:"Your payment is secured by FlyPay",
       cardNum:"Card number", exp:"Expiry", cvv:"CVV", cardName:"Cardholder",
       firstName:"First name", lastName:"Last name",
@@ -503,6 +515,7 @@ const state = {
   device:"desktop",           // desktop | phone
   currency:"USD",
   region:"BR",                 // 买家地区（演示过滤 PIX/Boleto 用）
+  abcd:{A:true,B:true,C:true,D:true}, // §8 模块显隐：A=顶栏 B=付给 C=金额 D=页脚
   // 体验流程阶段：shop | checkout | redirecting | processing
   flow:"shop",
   selectedPM:"googlepay",      // 当前选中支付方式（默认 Google Pay，照真源码）
@@ -623,11 +636,24 @@ function redirectingView(){
   </div></div>`;
 }
 
+/* §8 ABCD 模块显隐控制条（仅跳转/内嵌收银台演示；A=顶栏 B=付给 C=金额 D=页脚） */
+function abcdBar(){
+  if(!(state.integration==='redirect'||state.integration==='embedded')) return '';
+  const items=[['A','顶栏'],['B','付给'],['C','金额'],['D','页脚']];
+  return `<div class="abcd-bar">
+    <span class="abcd-title">🧩 模块显隐（演示：可对买家隐藏的区块）</span>
+    <div class="abcd-toggles">
+      ${items.map(([k,label])=>`<button class="abcd-toggle ${state.abcd[k]?'on':''}" data-abcd="${k}"><span class="abcd-dot"></span>${k}·${label}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
 /* 收银台视图：按对接方式包裹不同外壳 */
 function checkoutView(){
   // 跳转 Redirect：唯一离站形态 —— 整页切到飞来汇托管收银台
   if(state.integration==='redirect'){
     return `<div class="checkout-wrap">
+      ${abcdBar()}
       <div class="fake-url">🔒 <b>https://checkout.flyway-demo.com</b>/pay/se_xxx　<span style="margin-left:auto;color:#92400E;font-weight:700">↪ 已离开商户站，现位于飞来汇托管页</span></div>
       ${checkoutBody()}
     </div>`;
@@ -637,6 +663,7 @@ function checkoutView(){
   if(state.integration==='embedded'){
     payInner=`<div class="mcol-pay">
       <div class="mtitle-row"><h3>支付</h3><span class="host-tag host-fly">▣ 飞来汇内嵌 iframe</span></div>
+      ${abcdBar()}
       <div class="embed-frame"><div class="embed-tag">▣ FLYWAY EMBEDDED IFRAME · 合并卡 · 页内嵌入不跳转</div>${checkoutBody()}</div>
       ${poweredBy()}
     </div>`;
@@ -712,11 +739,12 @@ function poweredBy(){
   return `<div class="powered">${flyLogoSVG(13)} · 您仍停留在本商户网站</div>`;
 }
 
-/* §A 收银台本体（跳转/内嵌按真实生产源码像素级复刻；api/element 复用金额卡 + 对应卡表单） */
+/* §A 收银台本体（跳转/内嵌按真实生产源码像素级复刻；api/element 复用金额卡 + 对应卡表单）
+   §8 ABCD 模块显隐：A=顶栏 / B=付给 / C=金额 / D=页脚（跳转/内嵌演示可对买家隐藏的区块） */
 function checkoutBody(){
   const a=amountStr();
-  return `<div class="cashier">
-    <header class="ck-header">
+  const ab=state.abcd;
+  const headerHTML=`<header class="ck-header">
       <span class="ck-logo">${flyLogoSVG(30)}</span>
       <div class="ck-lang-wrap">
         <div class="ck-lang" id="ck-lang-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#5548FF" stroke-width="1.6"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" stroke="#5548FF" stroke-width="1.6"/></svg> ${state.lang==='zh'?'中文':'English'} <svg class="ck-caret ${state.langMenuOpen?'up':''}" width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#A5A4AA" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
@@ -725,26 +753,29 @@ function checkoutBody(){
           <div class="ck-lang-item ${state.lang==='en'?'on':''}" data-lang-pick="en">English${state.lang==='en'?' ✓':''}</div>
         </div>`:''}
       </div>
-    </header>
-    <div class="ck-main">
-    <div class="order-box">
-      <div class="order-amount"><span class="cur">${a.code}</span><span class="num">${a.int}<i>.${a.dec.replace('.','')}</i></span></div>
-      <div class="order-detail"><div class="li"><span class="label">${T('payTo')}</span><span class="value">${CONFIG.merchantName}</span></div></div>
-    </div>
-    <div class="tabset">
-      ${pmList()}
-      <div class="pm-note">${T('paymentNote')}</div>
-      ${bigPayBtn()}
-    </div>
-    <div class="page-footer">
+    </header>`;
+  const amountHTML=`<div class="order-amount"><span class="cur">${a.code}</span><span class="num">${a.int}<i>.${a.dec.replace('.','')}</i></span></div>`;
+  const payToHTML=`<div class="order-detail"><div class="li"><span class="label">${T('payTo')}</span><span class="value">${CONFIG.merchantName}</span></div></div>`;
+  const orderBoxHTML=(ab.C||ab.B)?`<div class="order-box">${ab.C?amountHTML:''}${ab.B?payToHTML:''}</div>`:'';
+  const footerHTML=`<div class="page-footer">
       <div class="foot-title"><span class="line"></span><span class="text">${shieldIcon()} ${T('shield')}</span><span class="line r"></span></div>
       <div class="foot-item"><span class="pre">✓</span><span>${T('foot1')}</span></div>
       <div class="foot-item"><span class="pre">✓</span><span>${T('foot2')}</span></div>
       <div class="foot-item"><span class="pre">✓</span><span>${T('foot3')}</span></div>
       <div class="certificate"><img class="cert-badges" src="${ICONS.certBadges}" alt="VISA Secure · Discover · Diners Club · ProtectBuy · Mastercard ID Check · PCI DSS · Amex SafeKey · JCB J/Secure"></div>
-      <div class="foot-fine">To better serve you, we may use some of your information according to our Privacy and Cookie Policy.</div>
-      <div class="foot-links"><b>Powered by FlyPay</b> &nbsp;|&nbsp; Term of Use &nbsp;|&nbsp; Privacy Policy</div>
+      <div class="foot-fine">${T('footFine')}</div>
+      <div class="foot-links">${T('footLinks')}</div>
+    </div>`;
+  return `<div class="cashier">
+    ${ab.A?headerHTML:''}
+    <div class="ck-main">
+    ${orderBoxHTML}
+    <div class="tabset">
+      ${pmList()}
+      <div class="pm-note">${T('paymentNote')}</div>
+      ${bigPayBtn()}
     </div>
+    ${ab.D?footerHTML:''}
     </div>
   </div>`;
 }
@@ -1063,6 +1094,7 @@ function bindApp(){
   const go=document.getElementById('go-checkout');
   if(go) go.onclick=startCheckout;
   document.querySelectorAll('[data-pm]').forEach(el=>el.onclick=()=>{state.selectedPM=el.dataset.pm;render();});
+  document.querySelectorAll('[data-abcd]').forEach(el=>el.onclick=()=>{const k=el.dataset.abcd;state.abcd[k]=!state.abcd[k];render();});
   const pay=document.getElementById('pay-btn'); if(pay) pay.onclick=submitPay;
   const ct=document.getElementById('code-toggle'); if(ct) ct.onclick=()=>{state.codeOpen=!state.codeOpen;render();};
   // 收银台顶栏语言下拉：点按钮开合，选项切换语言
@@ -1154,6 +1186,7 @@ function resetAll(){
   Object.assign(state,{
     mode:"experience",builder:"WooCommerce",integration:"redirect",perspective:"buyer",
     lang:"zh",device:"desktop",currency:"USD",region:"BR",flow:"shop",
+    abcd:{A:true,B:true,C:true,D:true},
     selectedPM:"googlepay",force:"success",failReason:"risk",tds3on:true,overlay:null,codeOpen:false
   });
   render();
