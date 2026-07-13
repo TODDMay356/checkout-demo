@@ -181,8 +181,8 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .cards .card-img{height:20px;width:auto;display:block;border-radius:3px}
 .pm-content{display:none;margin-top:10px}
 .pm.sel .pm-content{display:block}
-.wallet-hint{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:var(--radius-m);padding:14px 16px;color:var(--text-muted);line-height:20px;font-size:14px}
-.wallet-hint .wic{flex:0 0 auto;width:28px;height:28px;border-radius:6px;background:#eceafc;color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px}
+.wallet-hint{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:var(--radius-m);padding:14px 16px;color:var(--accent);line-height:20px;font-size:14px}
+.wallet-hint svg.wtip{flex:0 0 auto;width:46px;height:auto;display:block}
 .wallet-hint b{color:var(--accent);font-weight:600}
 .pm-note{color:var(--text-muted);font-size:12px;line-height:18px;margin-top:14px;text-align:center}
 
@@ -361,20 +361,22 @@ const CONFIG = {
     {code:"USD",symbol:"$",demoRate:1},      // 默认
     {code:"EUR",symbol:"€",demoRate:0.92}    // 演示汇率
   ],
-  // 买家地区（演示用）：仅用于过滤 PIX/Boleto 是否在列，非真实路由逻辑
+  // 买家地区（演示用）：按地区过滤本地支付方式（LPM），非真实路由逻辑
   regions:[
     {code:"BR",name:"巴西"},
-    {code:"US",name:"美国"},
-    {code:"HK",name:"中国香港"}
+    {code:"MX",name:"墨西哥"},
+    {code:"US",name:"美国"}
   ],
-  // 默认支付列表（照真源码顺序）：Apple Pay / Google Pay(默认选中) / Card / PIX / Boleto
-  // region=GLOBAL 恒显示；region=BR 仅当"买家地区"为 BR 时显示（演示过滤）
+  // 默认支付列表（照真源码顺序）：Apple Pay / Google Pay(默认选中) / Card / PIX / Boleto / OXXO
+  // region=GLOBAL 恒显示；带具体地区码的仅当"买家地区"匹配时显示（演示过滤）
+  // 巴西→PIX、Boleto；墨西哥→OXXO；美国→仅全球方式
   paymentMethods:[
     {id:"applepay", label:"Apple Pay",  type:"wallet", region:"GLOBAL"},
     {id:"googlepay",label:"Google Pay", type:"wallet", region:"GLOBAL", default:true},
     {id:"card",     label:"Card",       type:"card",   region:"GLOBAL"},
     {id:"pix",      label:"PIX",        type:"lpm",    region:"BR"},
-    {id:"boleto",   label:"Boleto",     type:"lpm",    region:"BR"}
+    {id:"boleto",   label:"Boleto",     type:"lpm",    region:"BR"},
+    {id:"oxxo",     label:"OXXO",       type:"lpm",    region:"MX"}
   ],
   // §11 卡表单形态：combined / split（Element=合并、API直连=拆分）
   cardFieldStyle:{ redirect:"combined", embedded:"combined", element:"combined", api:"split" },
@@ -744,7 +746,8 @@ function pmList(){
   const elementAllow=["card","applepay","googlepay"];
   const list=CONFIG.paymentMethods.filter(pm=>{
     if(state.integration==='element' && !elementAllow.includes(pm.id)) return false;
-    if(pm.region==='BR') return state.region==='BR';
+    // 本地支付方式（非 GLOBAL）仅在买家地区匹配时展示：巴西→PIX/Boleto，墨西哥→OXXO，美国→无
+    if(pm.region!=='GLOBAL') return pm.region===state.region;
     return true;
   });
   // 若当前选中 PM 被过滤掉，回退到列表首项
@@ -757,14 +760,15 @@ function pmList(){
     let sub='';
     if(sel){
       if(pm.type==='wallet'){
-        sub=`<div class="pm-content"><div class="wallet-hint"><span class="wic">${walletIcon()}</span><span>${T('walletSub').replace('{wallet}',`<b>${pm.label}</b>`)}</span></div></div>`;
+        sub=`<div class="pm-content"><div class="wallet-hint">${walletTipIcon()}<span>${T('walletSub').replace('{wallet}',`<b>${pm.label}</b>`)}</span></div></div>`;
       } else if(pm.type==='card'){
         sub=`<div class="pm-content">${cardForm()}</div>`;
       } else if(pm.type==='lpm'){
+        const country={BR:"Brazil",MX:"Mexico"}[pm.region]||"";
         sub=`<div class="pm-content"><div class="lpm-form">
           <div class="lpm-field"><label>${T('pmName')}</label><input placeholder="${T('pmName')}"></div>
           <div class="lpm-field"><label>${T('pmEmail')}</label><input placeholder="${T('pmEmail')}"></div>
-          <div class="lpm-field"><label>${T('pmCountry')}</label><input value="Brazil" readonly></div>
+          <div class="lpm-field"><label>${T('pmCountry')}</label><input value="${country}" readonly></div>
         </div></div>`;
       }
     }
@@ -1172,7 +1176,12 @@ function pmIcon(id){
   if(id==='card') return `<img class="pm-ico" src="${ICONS.card}" alt="">`;
   if(id==='pix') return `<img class="pm-ico" src="${ICONS.pix}" alt="">`;
   if(id==='boleto') return boletoIcon();
+  if(id==='oxxo') return oxxoIcon();
   return '';
+}
+// OXXO 图标（墨西哥便利店本地支付：红底白字 OXXO）
+function oxxoIcon(){
+  return `<svg class="pm-ico" width="28" height="20" viewBox="0 0 28 20" fill="none"><rect x="0.5" y="0.5" width="27" height="19" rx="2" fill="#ED1C24"/><text x="14" y="13.5" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="800" fill="#fff" text-anchor="middle" letter-spacing="-0.3">OXXO</text></svg>`;
 }
 function boletoIcon(){
   return `<svg class="pm-ico" width="28" height="20" viewBox="0 0 28 20" fill="none"><rect x="0.25" y="0.25" width="27.5" height="19.5" rx="1.75" fill="#fff" stroke="#CCCCCC" stroke-width="0.5"/><g fill="#171717"><rect x="3" y="4" width="1.4" height="12"/><rect x="5.6" y="4" width="0.8" height="12"/><rect x="7.6" y="4" width="1.8" height="12"/><rect x="10.6" y="4" width="0.8" height="12"/><rect x="12.6" y="4" width="2" height="12"/><rect x="16" y="4" width="0.8" height="12"/><rect x="18" y="4" width="1.4" height="12"/><rect x="20.6" y="4" width="0.8" height="12"/><rect x="22.6" y="4" width="2" height="12"/></g></svg>`;
@@ -1194,9 +1203,24 @@ function brandDiscover(){
 function shieldIcon(){
   return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 3v6c0 4.5-3 8-7 11-4-3-7-6.5-7-11V5l7-3z" fill="#21a470" fill-opacity=".15" stroke="#21a470" stroke-width="1.6"/><path d="M9 12l2 2 4-4" stroke="#21a470" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
-// 钱包展开提示图标（手机+卡，非品牌专属）
-function walletIcon(){
-  return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><rect x="4.5" y="6" width="9" height="2" rx="0.5" fill="currentColor" opacity=".5"/><rect x="13" y="9" width="9" height="12" rx="2" fill="currentColor" opacity=".12" stroke="currentColor" stroke-width="1.6"/><circle cx="17.5" cy="17.3" r="1.1" fill="currentColor"/></svg>`;
+// 钱包展开提示插画（照设计稿：带支付按钮的单据 → 箭头 → 带支付按钮的手机）
+function walletTipIcon(){
+  return `<svg class="wtip" viewBox="0 0 48 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2" y="3" width="28" height="30" rx="3.5" fill="#fff" stroke="#D5D6D9" stroke-width="2"/>
+    <rect x="7" y="9" width="16" height="2.6" rx="1.3" fill="#E4E3EA"/>
+    <rect x="7" y="14" width="11" height="2.6" rx="1.3" fill="#E4E3EA"/>
+    <rect x="7" y="19" width="7" height="2.6" rx="1.3" fill="#E4E3EA"/>
+    <rect x="7" y="24.5" width="14" height="5" rx="1.6" fill="#171717"/>
+    <path d="M13 33 L13 38 Q13 40 15 40 L23 40" stroke="#9A9A9A" stroke-width="2" stroke-linecap="round"/>
+    <path d="M20.5 37 L24 40 L20.5 43" stroke="#9A9A9A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="29" y="11" width="17" height="30" rx="3.5" fill="#fff" stroke="#9A9A9A" stroke-width="2.4"/>
+    <rect x="33" y="16" width="4.2" height="4.2" rx="1.2" stroke="#9A9A9A" stroke-width="1.6"/>
+    <rect x="39" y="16" width="4.2" height="4.2" rx="1.2" stroke="#9A9A9A" stroke-width="1.6"/>
+    <rect x="33" y="22" width="4.2" height="4.2" rx="1.2" stroke="#9A9A9A" stroke-width="1.6"/>
+    <rect x="39.6" y="22" width="1.4" height="4.2" rx="0.7" fill="#9A9A9A"/>
+    <rect x="42.2" y="22" width="1.4" height="4.2" rx="0.7" fill="#9A9A9A"/>
+    <rect x="33" y="33" width="10" height="4.5" rx="1.6" fill="#171717"/>
+  </svg>`;
 }
 
 /* 启动 */
