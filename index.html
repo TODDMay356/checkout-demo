@@ -153,14 +153,14 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 
 /* ===== §A.2 order-box（金额卡：C 金额 / B 付给） ===== */
 .order-box{background:#fff;border-radius:var(--card-radius);padding:32px;text-align:left}
-.order-amount{display:flex;align-items:baseline;justify-content:center;gap:4px;color:var(--text);line-height:1.4;padding:16px 0}
-.order-amount .cur{font-size:14px}
-.order-amount .num{font-family:var(--font-amount);font-size:48px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1}
+.order-amount{display:flex;align-items:baseline;justify-content:center;gap:4px;color:var(--text);line-height:1.4;padding:20px 0}
+.order-amount .cur{font-size:14px;color:var(--text-muted);font-weight:500}
+.order-amount .num{font-family:var(--font-amount);font-size:48px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
 .order-amount .num i{font-size:24px;font-style:normal}
-.order-detail{margin-top:16px}
+.order-detail{margin-top:20px}
 .order-detail .li{display:flex;gap:8px;line-height:20px}
 .order-detail .label{color:var(--text-muted);min-width:80px}
-.order-detail .value{color:var(--text);font-weight:600}
+.order-detail .value{color:var(--text);font-weight:500}
 
 /* ===== §A.2 tabset（支付区） ===== */
 .tabset{background:#fff;border-radius:var(--card-radius);padding:32px 20px;overflow:hidden;margin-top:12px}
@@ -379,7 +379,7 @@ const CONFIG = {
   // §11 卡表单形态：combined / split（Element=合并、API直连=拆分）
   cardFieldStyle:{ redirect:"combined", embedded:"combined", element:"combined", api:"split" },
   merchantName:"Payfi Trading Co., Limited", // 【可改】
-  baseAmount:3.29, // 演示金额（USD）
+  baseAmount:1.00, // 演示金额（USD）
   // 卖点数字（占位待替换，不得伪装真实统计）
   stats:[
     {v:"99.9%",k:"演示支付成功率"},
