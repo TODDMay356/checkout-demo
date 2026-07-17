@@ -93,10 +93,10 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .fake-url{background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 12px;
   font-size:12px;color:var(--text-muted);margin-bottom:14px;display:flex;align-items:center;gap:6px}
 .fake-url b{color:#16A34A}
-/* §8 ABCD 模块显隐控制条（演示控件，非收银台本体） */
-.abcd-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#1E293B;color:#E2E8F0;border-radius:10px;padding:9px 14px;margin-bottom:12px}
+/* §8 模块显隐控制条（演示控件，非收银台本体） */
+.abcd-bar{display:flex;align-items:center;gap:10px 20px;flex-wrap:wrap;background:#1E293B;color:#E2E8F0;border-radius:10px;padding:10px 14px;margin-bottom:12px}
+.abcd-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .abcd-title{font-size:12px;font-weight:600;color:#94A3B8}
-.abcd-toggles{display:flex;gap:6px;flex-wrap:wrap}
 .abcd-toggle{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 10px;border-radius:7px;background:#334155;color:#CBD5E1}
 .abcd-toggle .abcd-dot{width:8px;height:8px;border-radius:50%;background:#64748B}
 .abcd-toggle.on{background:var(--accent);color:#fff}
@@ -515,7 +515,8 @@ const state = {
   device:"desktop",           // desktop | phone
   currency:"USD",
   region:"BR",                 // 买家地区（演示过滤 PIX/Boleto 用）
-  abcd:{A:true,B:true,C:true,D:true}, // §8 模块显隐：A=顶栏 B=付给 C=金额 D=页脚
+  // §8 收银台模块显隐：内容模块 lang(A 语言)/order(B 商户+订单信息)；头尾 header(flyway logo)/footer(页脚安全提示)
+  show:{lang:true, order:true, header:true, footer:true},
   // 体验流程阶段：shop | checkout | redirecting | processing
   flow:"shop",
   selectedPM:"googlepay",      // 当前选中支付方式（默认 Google Pay，照真源码）
@@ -636,14 +637,19 @@ function redirectingView(){
   </div></div>`;
 }
 
-/* §8 ABCD 模块显隐控制条（仅跳转/内嵌收银台演示；A=顶栏 B=付给 C=金额 D=页脚） */
+/* §8 模块显隐控制条（仅跳转/内嵌收银台演示）：内容模块(语言/商户+订单) + 头尾显隐 */
 function abcdBar(){
   if(!(state.integration==='redirect'||state.integration==='embedded')) return '';
-  const items=[['A','顶栏'],['B','付给'],['C','金额'],['D','页脚']];
+  const s=state.show;
+  const tog=(k,label)=>`<button class="abcd-toggle ${s[k]?'on':''}" data-show="${k}"><span class="abcd-dot"></span>${label}</button>`;
   return `<div class="abcd-bar">
-    <span class="abcd-title">🧩 模块显隐（演示：可对买家隐藏的区块）</span>
-    <div class="abcd-toggles">
-      ${items.map(([k,label])=>`<button class="abcd-toggle ${state.abcd[k]?'on':''}" data-abcd="${k}"><span class="abcd-dot"></span>${k}·${label}</button>`).join('')}
+    <div class="abcd-group">
+      <span class="abcd-title">🧩 内容模块（可对买家隐藏）</span>
+      ${tog('lang','A·语言')}${tog('order','B·商户/订单信息')}
+    </div>
+    <div class="abcd-group">
+      <span class="abcd-title">头尾显隐</span>
+      ${tog('header','头部')}${tog('footer','尾部')}
     </div>
   </div>`;
 }
@@ -740,23 +746,26 @@ function poweredBy(){
 }
 
 /* §A 收银台本体（跳转/内嵌按真实生产源码像素级复刻；api/element 复用金额卡 + 对应卡表单）
-   §8 ABCD 模块显隐：A=顶栏 / B=付给 / C=金额 / D=页脚（跳转/内嵌演示可对买家隐藏的区块） */
+   §8 模块显隐：内容模块 lang(A 语言)/order(B 商户+订单信息)；头尾 header(flyway logo)/footer(页脚) */
 function checkoutBody(){
   const a=amountStr();
-  const ab=state.abcd;
-  const headerHTML=`<header class="ck-header">
-      <span class="ck-logo">${flyLogoSVG(30)}</span>
-      <div class="ck-lang-wrap">
+  const s=state.show;
+  const langHTML=`<div class="ck-lang-wrap">
         <div class="ck-lang" id="ck-lang-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#5548FF" stroke-width="1.6"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" stroke="#5548FF" stroke-width="1.6"/></svg> ${state.lang==='zh'?'中文':'English'} <svg class="ck-caret ${state.langMenuOpen?'up':''}" width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#A5A4AA" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         ${state.langMenuOpen?`<div class="ck-lang-menu">
           <div class="ck-lang-item ${state.lang==='zh'?'on':''}" data-lang-pick="zh">中文${state.lang==='zh'?' ✓':''}</div>
           <div class="ck-lang-item ${state.lang==='en'?'on':''}" data-lang-pick="en">English${state.lang==='en'?' ✓':''}</div>
         </div>`:''}
-      </div>
-    </header>`;
+      </div>`;
+  // 头部栏：logo(头部开关) 左、语言(A 语言开关) 右；两者都关则不渲染整条
+  const headerHTML=(s.header||s.lang)?`<header class="ck-header">
+      ${s.header?`<span class="ck-logo">${flyLogoSVG(30)}</span>`:`<span></span>`}
+      ${s.lang?langHTML:`<span></span>`}
+    </header>`:'';
   const amountHTML=`<div class="order-amount"><span class="cur">${a.code}</span><span class="num">${a.int}<i>.${a.dec.replace('.','')}</i></span></div>`;
   const payToHTML=`<div class="order-detail"><div class="li"><span class="label">${T('payTo')}</span><span class="value">${CONFIG.merchantName}</span></div></div>`;
-  const orderBoxHTML=(ab.C||ab.B)?`<div class="order-box">${ab.C?amountHTML:''}${ab.B?payToHTML:''}</div>`:'';
+  // B 商户信息+订单信息 = 金额 + 付给 一整块
+  const orderBoxHTML=s.order?`<div class="order-box">${amountHTML}${payToHTML}</div>`:'';
   const footerHTML=`<div class="page-footer">
       <div class="foot-title"><span class="line"></span><span class="text">${shieldIcon()} ${T('shield')}</span><span class="line r"></span></div>
       <div class="foot-item"><span class="pre">✓</span><span>${T('foot1')}</span></div>
@@ -767,7 +776,7 @@ function checkoutBody(){
       <div class="foot-links">${T('footLinks')}</div>
     </div>`;
   return `<div class="cashier">
-    ${ab.A?headerHTML:''}
+    ${headerHTML}
     <div class="ck-main">
     ${orderBoxHTML}
     <div class="tabset">
@@ -775,7 +784,7 @@ function checkoutBody(){
       <div class="pm-note">${T('paymentNote')}</div>
       ${bigPayBtn()}
     </div>
-    ${ab.D?footerHTML:''}
+    ${s.footer?footerHTML:''}
     </div>
   </div>`;
 }
@@ -1094,7 +1103,7 @@ function bindApp(){
   const go=document.getElementById('go-checkout');
   if(go) go.onclick=startCheckout;
   document.querySelectorAll('[data-pm]').forEach(el=>el.onclick=()=>{state.selectedPM=el.dataset.pm;render();});
-  document.querySelectorAll('[data-abcd]').forEach(el=>el.onclick=()=>{const k=el.dataset.abcd;state.abcd[k]=!state.abcd[k];render();});
+  document.querySelectorAll('[data-show]').forEach(el=>el.onclick=()=>{const k=el.dataset.show;state.show[k]=!state.show[k];render();});
   const pay=document.getElementById('pay-btn'); if(pay) pay.onclick=submitPay;
   const ct=document.getElementById('code-toggle'); if(ct) ct.onclick=()=>{state.codeOpen=!state.codeOpen;render();};
   // 收银台顶栏语言下拉：点按钮开合，选项切换语言
@@ -1186,7 +1195,7 @@ function resetAll(){
   Object.assign(state,{
     mode:"experience",builder:"WooCommerce",integration:"redirect",perspective:"buyer",
     lang:"zh",device:"desktop",currency:"USD",region:"BR",flow:"shop",
-    abcd:{A:true,B:true,C:true,D:true},
+    show:{lang:true,order:true,header:true,footer:true},
     selectedPM:"googlepay",force:"success",failReason:"risk",tds3on:true,overlay:null,codeOpen:false
   });
   render();
