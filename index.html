@@ -426,6 +426,12 @@ const CONFIG = {
       cardLabel:"信用卡",
       pmName:"姓名", pmEmail:"电子邮件", pmCountry:"国家和地区",
       paymentNote:"实际展示支付方式以商户开通支付方式为准",
+      msSecureCheckout:"安全结账", msStay:"始终停留在商户网站，未跳转", msStillHere:"您仍停留在本商户网站",
+      msNavHome:"首页", msNavAll:"全部商品", msNavCart:"购物车",
+      msPay:"支付", msPayMethod:"支付方式", msOrderSummary:"订单摘要",
+      msSubtotal:"小计", msShipping:"运费", msFreeShip:"免运费", msTotal:"合计",
+      tagEmbedded:"飞来汇内嵌 iframe", tagEmbeddedNote:"FLYWAY EMBEDDED IFRAME · 合并卡 · 页内嵌入不跳转",
+      tagApi:"商户自绘 · 拆分卡 · 商户直接收卡号（PCI 最大）", tagElement:"仅卡字段为飞来汇托管合并控件",
       cardInfo:"卡片信息", expMMYY:"月/年",
       successTitle:"支付成功", successDesc:"您的演示订单已完成（模拟）。",
       failTitle:"支付失败", retry:"重试", close:"关闭",
@@ -464,6 +470,12 @@ const CONFIG = {
       cardLabel:"Card",
       pmName:"Name", pmEmail:"Email", pmCountry:"Country and regions",
       paymentNote:"Actual methods shown depend on the merchant's enabled options.",
+      msSecureCheckout:"Secure checkout", msStay:"Always on the merchant's site — no redirect", msStillHere:"You're still on the merchant's website",
+      msNavHome:"Home", msNavAll:"All products", msNavCart:"Cart",
+      msPay:"Pay", msPayMethod:"Payment method", msOrderSummary:"Order summary",
+      msSubtotal:"Subtotal", msShipping:"Shipping", msFreeShip:"Free", msTotal:"Total",
+      tagEmbedded:"Flyway embedded iframe", tagEmbeddedNote:"FLYWAY EMBEDDED IFRAME · merged card · embedded in-page, no redirect",
+      tagApi:"Merchant-rendered · split card · merchant collects PAN (max PCI)", tagElement:"Only the card field is a Flyway-hosted merged control",
       cardInfo:"Card information", expMMYY:"MM / YY",
       successTitle:"Payment successful", successDesc:"Your demo order is complete (simulated).",
       failTitle:"Payment failed", retry:"Retry", close:"Close",
@@ -664,21 +676,21 @@ function checkoutView(){
   let payInner='';
   if(state.integration==='embedded'){
     payInner=`<div class="mcol-pay">
-      <div class="mtitle-row"><h3>支付</h3><span class="host-tag host-fly">▣ 飞来汇内嵌 iframe</span></div>
+      <div class="mtitle-row"><h3>${T('msPay')}</h3><span class="host-tag host-fly">▣ ${T('tagEmbedded')}</span></div>
       ${abcdBar()}
-      <div class="embed-frame"><div class="embed-tag">▣ FLYWAY EMBEDDED IFRAME · 合并卡 · 页内嵌入不跳转</div>${checkoutBody()}</div>
+      <div class="embed-frame"><div class="embed-tag">▣ ${T('tagEmbeddedNote')}</div>${checkoutBody()}</div>
       ${poweredBy()}
     </div>`;
   } else if(state.integration==='api'){
     payInner=`<div class="mcol-pay">
-      <div class="mtitle-row"><h3>支付方式</h3><span class="host-tag host-mer">商户自绘 · 拆分卡 · 商户直接收卡号(PCI 最大)</span></div>
+      <div class="mtitle-row"><h3>${T('msPayMethod')}</h3><span class="host-tag host-mer">${T('tagApi')}</span></div>
       <div class="pm-card" style="padding:0">${pmList()}</div>
       ${bigPayBtn()}
       ${poweredBy()}
     </div>`;
   } else { // element
     payInner=`<div class="mcol-pay">
-      <div class="mtitle-row"><h3>支付方式</h3><span class="host-tag host-fly">仅卡字段为飞来汇托管合并控件</span></div>
+      <div class="mtitle-row"><h3>${T('msPayMethod')}</h3><span class="host-tag host-fly">${T('tagElement')}</span></div>
       <div class="pm-card" style="padding:0">${pmList()}</div>
       ${bigPayBtn()}
       ${poweredBy()}
@@ -705,13 +717,13 @@ function merchantShell(payInner){
     <div class="browser">
       <div class="dots"><i></i><i></i><i></i></div>
       <div class="url">🔒 <b>https://${merchantDomain()}</b>/checkout</div>
-      <span class="stay">● 始终停留在商户网站，未跳转</span>
+      <span class="stay">● ${T('msStay')}</span>
     </div>
     <div class="mpage">
       <div class="mhead">
         <div class="mlogo">${name}</div>
-        <div class="mnav"><span>首页</span><span>全部商品</span><span>购物车</span></div>
-        <div class="secure">🔒 安全结账</div>
+        <div class="mnav"><span>${T('msNavHome')}</span><span>${T('msNavAll')}</span><span>${T('msNavCart')}</span></div>
+        <div class="secure">🔒 ${T('msSecureCheckout')}</div>
       </div>
       <div class="mbody">
         ${payInner}
@@ -724,21 +736,21 @@ function merchantShell(payInner){
 function orderSummary(){
   const a=amountStr();
   return `<div class="mcol-sum">
-    <h3>订单摘要</h3>
+    <h3>${T('msOrderSummary')}</h3>
     <div class="osum-item">
       <div class="osum-thumb"><span class="qty">1</span></div>
       <div class="nm">${T('shopTitle')}</div>
       <div class="pr">${a.sym}${a.int}${a.dec}</div>
     </div>
-    <div class="osum-line"><span>小计</span><span>${a.sym}${a.int}${a.dec}</span></div>
-    <div class="osum-line"><span>运费</span><span>免运费</span></div>
-    <div class="osum-total"><span>合计 ${a.code}</span><span>${a.sym}${a.int}${a.dec}</span></div>
-    <div class="muted" style="font-size:12px;margin-top:14px">付给：${CONFIG.merchantName}</div>
+    <div class="osum-line"><span>${T('msSubtotal')}</span><span>${a.sym}${a.int}${a.dec}</span></div>
+    <div class="osum-line"><span>${T('msShipping')}</span><span>${T('msFreeShip')}</span></div>
+    <div class="osum-total"><span>${T('msTotal')} ${a.code}</span><span>${a.sym}${a.int}${a.dec}</span></div>
+    <div class="muted" style="font-size:12px;margin-top:14px">${T('payTo')}：${CONFIG.merchantName}</div>
   </div>`;
 }
 
 function poweredBy(){
-  return `<div class="powered">${flyLogoSVG(13)} · 您仍停留在本商户网站</div>`;
+  return `<div class="powered">${flyLogoSVG(13)} · ${T('msStillHere')}</div>`;
 }
 
 /* §A 收银台本体（跳转/内嵌按真实生产源码像素级复刻；api/element 复用金额卡 + 对应卡表单）
