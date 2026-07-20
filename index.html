@@ -361,16 +361,15 @@ const CONFIG = {
     "自建站(自有商城)":"SelfHosted"
   },
   integrations:["redirect","embedded","api","element"],
-  // §5 支持矩阵：true / false / "planned"
+  // §6 支持矩阵：true / false（取消 planned 三态）。规则：自建站四种全支持；Element 仅自建站
   support:{
-    WooCommerce:{redirect:true, embedded:true,  api:false, element:"planned"},
+    WooCommerce:{redirect:true, embedded:true,  api:false, element:false},
     Shopyy:     {redirect:true, embedded:false, api:true,  element:false},
     Shoplazza:  {redirect:true, embedded:false, api:true,  element:false},
     OpenCart:   {redirect:false,embedded:true,  api:false, element:false},
     Magento2:   {redirect:true, embedded:true,  api:false, element:false},
     Ueeshop:    {redirect:true, embedded:false, api:false, element:false},
-    // 自建站最灵活，跳转/内嵌/API 直连均可；Element 仍仅 WooCommerce 规划中，故此处不打实勾
-    SelfHosted: {redirect:true, embedded:true,  api:true,  element:false}
+    SelfHosted: {redirect:true, embedded:true,  api:true,  element:true}
   },
   currencies:[
     {code:"USD",symbol:"$",demoRate:1},      // 默认
@@ -397,12 +396,6 @@ const CONFIG = {
   cardFieldStyle:{ redirect:"combined", embedded:"combined", element:"combined", api:"split" },
   merchantName:"Merchant Name", // 中性占位（§Z：避免真实/疑似真实商户名）
   baseAmount:1.00, // 演示金额（USD）
-  // 卖点数字（占位待替换，不得伪装真实统计）
-  stats:[
-    {v:"99.9%",k:"演示支付成功率"},
-    {v:"150+", k:"覆盖国家/地区"},
-    {v:"20+",  k:"本地支付方式"}
-  ],
   i18n:{
     zh:{
       experience:"体验模式", overview:"能力总览",
@@ -444,7 +437,7 @@ const CONFIG = {
       merStep2Title:"渲染收银台", merStep2:"按对接方式渲染收银台 / 卡字段控件。",
       merStep3Title:"接收结果", merStep3:"通过回调 / 查询接口获取支付结果并更新订单。",
       showCode:"展开示例代码", hideCode:"收起代码",
-      sdkNote:"Apple Pay / Google Pay 提供 SDK 供商户集成。",
+      sdkNote:"Apple Pay / Google Pay 提供 SDK 供商户集成。", mvOverview:"集成概览", mvFieldNote:"字段一律以 <占位>，以官方文档为准。",
       testCardTip:"演示环境请使用测试卡号 4242 4242 4242 4242",
       phPlaceholder:"占位待替换"
     },
@@ -488,7 +481,7 @@ const CONFIG = {
       merStep2Title:"Render checkout", merStep2:"Render checkout / card field control per integration.",
       merStep3Title:"Receive result", merStep3:"Get result via callback/query API and update the order.",
       showCode:"Show sample code", hideCode:"Hide code",
-      sdkNote:"Apple Pay / Google Pay provide SDKs for merchant integration.",
+      sdkNote:"Apple Pay / Google Pay provide SDKs for merchant integration.", mvOverview:"Integration overview", mvFieldNote:"All fields shown as <placeholder>; refer to official docs.",
       testCardTip:"Use test card 4242 4242 4242 4242 in this demo",
       phPlaceholder:"placeholder"
     }
@@ -899,7 +892,7 @@ function merchantView(){
   const iLabels={redirect:"跳转 Redirect",embedded:"内嵌 Embedded",api:"API 直连",element:"Element"};
   const code=mockCode();
   return `<div class="merch">
-    <h3>集成概览 · ${state.builder.replace(/\(.*\)/,'')} × ${iLabels[state.integration]}</h3>
+    <h3>${T('mvOverview')} · ${state.builder.replace(/\(.*\)/,'')} × ${iLabels[state.integration]}</h3>
     <div class="steps">
       <div class="step"><div class="n">1</div><h4>${T('merStep1Title')}</h4><p>${T('merStep1')}</p></div>
       <div class="step"><div class="n">2</div><h4>${T('merStep2Title')}</h4><p>${T('merStep2')}</p></div>
@@ -907,7 +900,7 @@ function merchantView(){
     </div>
     <div class="code-toggle" id="code-toggle">${state.codeOpen?'▾ '+T('hideCode'):'▸ '+T('showCode')}</div>
     <pre class="code ${state.codeOpen?'open':''}">${code}</pre>
-    <div class="sdk-note">💡 ${T('sdkNote')}　｜　字段一律以 &lt;占位&gt;，以官方文档为准。</div>
+    <div class="sdk-note">💡 ${T('sdkNote')}　｜　${T('mvFieldNote')}</div>
   </div>`;
 }
 
@@ -943,7 +936,6 @@ function overviewStage(){
   return `<div class="overview">
     ${matrixPanel()}
     ${pmCoveragePanel()}
-    ${statsPanel()}
   </div>`;
 }
 
@@ -951,15 +943,11 @@ function matrixPanel(){
   const cols=[["redirect","跳转"],["embedded","内嵌"],["api","API直连"],["element","Element"]];
   const rows=CONFIG.builders.map(name=>{
     const k=bKey(name); const s=CONFIG.support[k];
-    const cells=cols.map(([key])=>{
-      const v=s[key];
-      if(v===true) return `<td><span class="yes">✓</span></td>`;
-      if(v==="planned") return `<td><span class="planned">规划中</span></td>`;
-      return `<td><span class="no">✗</span></td>`;
-    }).join('');
+    const cells=cols.map(([key])=>
+      s[key]===true ? `<td><span class="yes">✓</span></td>` : `<td><span class="no">✗</span></td>`
+    ).join('');
     return `<tr><td>${name}</td>${cells}</tr>`;
   }).join('');
-  // 覆盖小结
   const count=key=>CONFIG.builders.filter(n=>CONFIG.support[bKey(n)][key]===true).length;
   const N=CONFIG.builders.length;
   return `<div class="panel">
@@ -968,29 +956,20 @@ function matrixPanel(){
       <tr><th>建站工具</th><th>跳转</th><th>内嵌</th><th>API直连</th><th>Element</th></tr>
       ${rows}
     </table>
-    <div class="summary">覆盖小结：跳转 ${count('redirect')}/${N}、内嵌 ${count('embedded')}/${N}、API 直连 ${count('api')}/${N}、Element 0/${N}（仅 WooCommerce 规划中）。</div>
-    <div class="summary">注：Element 列禁止打实勾，仅 WooCommerce 标"规划中"（虚线/灰显），其余 ✗。</div>
+    <div class="summary">覆盖小结：跳转 ${count('redirect')}/${N}、内嵌 ${count('embedded')}/${N}、API 直连 ${count('api')}/${N}、Element ${count('element')}/${N}（仅自建站）。</div>
   </div>`;
 }
 
 function pmCoveragePanel(){
-  const items=["卡","Apple Pay","Google Pay","PayPal","PIX","iDEAL","MB WAY","OXXO","20+ LPM"];
+  const items=["卡 / 信用卡","Apple Pay","Google Pay","PayPal","PIX","Boleto","iDEAL","MB WAY","OXXO","20+ LPM"];
   return `<div class="panel">
     <h3>支付方式覆盖</h3>
     <div class="cov">${items.map(i=>`<span>${i}</span>`).join('')}</div>
-    <div class="summary">钱包三件套（Apple/Google Pay、PayPal）全露；Apple/Google Pay 提供 SDK 供商户集成；LPM 含 PIX/iDEAL/MB WAY/OXXO 等 20+ 本地支付方式。</div>
+    <div class="summary">钱包（Apple Pay / Google Pay / PayPal）；LPM 含 PIX / Boleto / iDEAL / MB WAY / OXXO 等 20+ 本地支付方式；Apple / Google Pay 提供 SDK 供商户集成。</div>
+    <div class="summary">币种：支持 <b>45+</b> 币种（本 demo 演示 USD / EUR）。</div>
   </div>`;
 }
 
-function statsPanel(){
-  const boxes=CONFIG.stats.map(s=>
-    `<div class="statbox"><div class="v">${s.v}</div><div class="k">${s.k} <span class="ph-tag">${T('phPlaceholder')}</span></div></div>`).join('');
-  return `<div class="panel">
-    <h3>卖点数字 <span class="ph-tag">占位待替换</span></h3>
-    <div class="stat">${boxes}</div>
-    <div class="summary">以上数字均为占位演示值，非真实统计，正式版需替换。</div>
-  </div>`;
-}
 
 /* ---------- 导演控制台 ---------- */
 function renderConsole(){
