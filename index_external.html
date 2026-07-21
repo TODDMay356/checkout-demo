@@ -33,11 +33,16 @@ input{font-family:inherit}
 .muted{color:var(--text-muted)}
 
 /* 顶部应用条 */
+/* 防滥用：全局演示警示条（sticky 置顶，始终可见） */
+.demo-warn{position:sticky;top:0;z-index:200;background:#B91C1C;color:#fff;font-size:12.5px;font-weight:700;
+  text-align:center;padding:7px 14px;letter-spacing:.2px;line-height:1.4}
 .appbar{
   background:#fff;border-bottom:1px solid var(--line);
   padding:10px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
-  position:sticky;top:0;z-index:30;
 }
+/* 结果弹窗上的"演示模拟"标签（防止只截弹窗冒充真实结果） */
+.modal-demo{background:#FEF2F2;color:#B91C1C;font-size:11px;font-weight:700;text-align:center;
+  border-radius:8px;padding:6px 10px;margin-bottom:14px;letter-spacing:.2px}
 .appbar .logo{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--brand-ink)}
 .tabs{display:flex;gap:6px;background:#F1F2F6;padding:4px;border-radius:10px}
 .tab{padding:6px 14px;border-radius:8px;font-size:14px;color:var(--text-muted);font-weight:600}
@@ -446,6 +451,8 @@ const CONFIG = {
       cardLabel:"信用卡",
       pmName:"姓名", pmEmail:"电子邮件", pmCountry:"国家和地区",
       paymentNote:"实际展示支付方式以商户开通支付方式为准",
+      demoWarn:"演示环境 · 非真实支付页面 · 请勿输入真实银行卡信息", demoWarnEn:"DEMO — NOT A REAL PAYMENT PAGE · DO NOT ENTER REAL CARD DETAILS",
+      modalDemo:"演示模拟 · 非真实交易结果",
       msSecureCheckout:"安全结账", msStay:"始终停留在商户网站，未跳转", msStillHere:"您仍停留在本商户网站",
       msNavHome:"首页", msNavAll:"全部商品", msNavCart:"购物车",
       msPay:"支付", msPayMethod:"支付方式", msOrderSummary:"订单摘要",
@@ -490,6 +497,8 @@ const CONFIG = {
       cardLabel:"Card",
       pmName:"Name", pmEmail:"Email", pmCountry:"Country and regions",
       paymentNote:"Actual methods shown depend on the merchant's enabled options.",
+      demoWarn:"DEMO — NOT A REAL PAYMENT PAGE · DO NOT ENTER REAL CARD DETAILS", demoWarnEn:"演示环境 · 非真实支付页面 · 请勿输入真实银行卡信息",
+      modalDemo:"DEMO simulation · not a real transaction result",
       msSecureCheckout:"Secure checkout", msStay:"Always on the merchant's site — no redirect", msStillHere:"You're still on the merchant's website",
       msNavHome:"Home", msNavAll:"All products", msNavCart:"Cart",
       msPay:"Pay", msPayMethod:"Payment method", msOrderSummary:"Order summary",
@@ -581,10 +590,15 @@ function render(){
 function renderApp(){
   const app=document.getElementById('app');
   app.className = state.device==='phone' ? 'viewport-phone' : '';
-  app.innerHTML = appbar() + (state.mode==='experience'
+  app.innerHTML = demoWarnBar() + appbar() + (state.mode==='experience'
       ? selectbar()+comboBanner()+`<div class="stage"><div class="stage-inner">${experienceStage()}</div></div>`
       : `<div class="stage"><div class="stage-inner">${overviewStage()}</div></div>`);
   bindApp();
+}
+
+// 防滥用：全局固定演示警示条（始终置顶、双语、不可关闭）
+function demoWarnBar(){
+  return `<div class="demo-warn">⚠ ${T('demoWarn')}　·　${T('demoWarnEn')}</div>`;
 }
 
 function appbar(){
@@ -1108,6 +1122,8 @@ function renderOverlay(){
       <button class="fail-btn-wide" id="ov-retry">${btnLabel}</button>
     </div>`;
   }
+  // 防滥用：每个结果弹窗顶部强制打上"演示模拟"标签（防止只截弹窗冒充真实交易结果）
+  html = html.replace(/(<div class="modal[^"]*">)/, `$1<div class="modal-demo">${T('modalDemo')}</div>`);
   root.innerHTML=`<div class="overlay">${html}</div>`;
   bindOverlay();
 }
