@@ -541,7 +541,7 @@ const state = {
   mode:"experience",          // experience | overview
   builder:"WooCommerce",      // 显示名
   integration:"redirect",
-  perspective:"merchant",     // merchant(支付流程,默认落地) | buyer(收银台预览)
+  perspective:"buyer",        // buyer(收银台预览,默认落地) | merchant(支付流程)
   lang:"zh",
   langMenuOpen:false,          // 收银台顶栏语言下拉
   device:"desktop",           // desktop | phone
@@ -615,7 +615,7 @@ function selectbar(){
   const iList = isExternal() ? supportedIntegrations(state.builder) : CONFIG.integrations;
   const iChips=iList.map(i=>
     `<button class="chip ${state.integration===i?'active':''}" data-int="${i}">${iLabels[i]}</button>`).join('');
-  const pChips=["merchant","buyer"].map(p=>
+  const pChips=["buyer","merchant"].map(p=>
     `<button class="chip ${state.perspective===p?'active':''}" data-persp="${p}">${T(p)}</button>`).join('');
   const rOpts=CONFIG.regions.map(r=>
     `<option value="${r.code}" ${state.region===r.code?'selected':''}>${r.name}</option>`).join('');
@@ -1224,7 +1224,7 @@ function applyEditionFallback(){
 }
 function resetAll(){
   Object.assign(state,{
-    mode:"experience",builder:"WooCommerce",integration:"redirect",perspective:"merchant",
+    mode:"experience",builder:"WooCommerce",integration:"redirect",perspective:"buyer",
     lang:"zh",device:"desktop",currency:"USD",region:"BR",flow:"shop",
     show:{header:true,order:true},
     selectedPM:"googlepay",force:"success",failReason:"risk",tds3on:true,overlay:null,codeOpen:false
