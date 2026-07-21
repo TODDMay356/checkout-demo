@@ -453,6 +453,7 @@ const CONFIG = {
       paymentNote:"实际展示支付方式以商户开通支付方式为准",
       demoWarn:"演示环境 · 非真实支付页面 · 请勿输入真实银行卡信息", demoWarnEn:"DEMO — NOT A REAL PAYMENT PAGE · DO NOT ENTER REAL CARD DETAILS",
       modalDemo:"演示模拟 · 非真实交易结果",
+      demoNoticeTitle:"演示环境", demoNoticeDesc:"这是收银台演示，不会真实扣款、也不会产生真实支付结果。", ok:"知道了",
       msSecureCheckout:"安全结账", msStay:"始终停留在商户网站，未跳转", msStillHere:"您仍停留在本商户网站",
       msNavHome:"首页", msNavAll:"全部商品", msNavCart:"购物车",
       msPay:"支付", msPayMethod:"支付方式", msOrderSummary:"订单摘要",
@@ -499,6 +500,7 @@ const CONFIG = {
       paymentNote:"Actual methods shown depend on the merchant's enabled options.",
       demoWarn:"DEMO — NOT A REAL PAYMENT PAGE · DO NOT ENTER REAL CARD DETAILS", demoWarnEn:"演示环境 · 非真实支付页面 · 请勿输入真实银行卡信息",
       modalDemo:"DEMO simulation · not a real transaction result",
+      demoNoticeTitle:"Demo environment", demoNoticeDesc:"This is a checkout demo — no real charge and no real payment result.", ok:"Got it",
       msSecureCheckout:"Secure checkout", msStay:"Always on the merchant's site — no redirect", msStillHere:"You're still on the merchant's website",
       msNavHome:"Home", msNavAll:"All products", msNavCart:"Cart",
       msPay:"Pay", msPayMethod:"Payment method", msOrderSummary:"Order summary",
@@ -524,25 +526,6 @@ const CONFIG = {
   }
 };
 // 失败错误码（已核实的真实文案；按钮文案随错误类型变化，非统一"更换支付方式"）
-const FAIL_CODES = {
-  risk:  { code:"ZFWG00007",
-    zh:"该笔交易被发卡行判定为高风险交易，请建议付款人更换银行卡或联系其发卡行同意支付。",
-    en:"This transaction was declined by the issuing bank as high risk. Please ask the payer to use another card or contact their bank.",
-    btnZh:"更换支付方式", btnEn:"Change payment method" },
-  expiry:{ code:"ZFZF00013",
-    zh:"卡有效期无效，请输入正确的卡有效期。",
-    en:"Invalid card expiry date. Please enter the correct expiry date.",
-    btnZh:"编辑有效期", btnEn:"Edit expiry" },
-  cvv:   { code:"ZFZF00011",
-    zh:"请输入正确的 CVV。",
-    en:"Please enter the correct CVV.",
-    btnZh:"编辑 CVV", btnEn:"Edit CVV" },
-  tds3:  { code:"ZF3D00004",
-    zh:"支付失败。3DS 认证失败，请引导付款人重新验证，或更换卡片。",
-    en:"Payment failed. 3DS authentication failed. Please retry verification or use another card.",
-    btnZh:"重新验证", btnEn:"Verify again" }
-};
-
 /* ============================================================
    集中 state + render()
    ============================================================ */
@@ -562,10 +545,7 @@ const state = {
   flow:"shop",
   selectedPM:"googlepay",      // 当前选中支付方式（默认 Google Pay，照真源码）
   consoleCollapsed:false,
-  force:"success",            // success | fail | 3ds（控制台强制结果）
-  failReason:"risk",          // risk | expiry | cvv | tds3（控制台失败原因下拉）
-  tds3on:true,                // 3DS 独立开关
-  overlay:null,               // null | processing | success | fail | tds3-loading | tds3-verify | tds3-leave
+  overlay:null,               // null | notice（仅"演示不扣款"提示）
   codeOpen:false
 };
 
@@ -1019,6 +999,7 @@ function pmCoveragePanel(){
     <div class="cov">${items.map(i=>`<span>${i}</span>`).join('')}</div>
     <div class="summary">钱包（Apple Pay / Google Pay / PayPal）；LPM 含 PIX / Boleto / iDEAL / MB WAY / OXXO 等 20+ 本地支付方式；Apple / Google Pay 提供 SDK 供商户集成。</div>
     <div class="summary">币种：支持 <b>45+</b> 币种（本 demo 演示 USD / EUR）。</div>
+    <div class="summary">风控与验证：支持 <b>3DS / SCA</b> 强客户认证。</div>
   </div>`;
 }
 
@@ -1030,22 +1011,6 @@ function renderConsole(){
   root.innerHTML=`<div class="console ${state.consoleCollapsed?'collapsed':''}">
     <div class="console-head" id="console-head">🎬 导演控制台 <span>${state.consoleCollapsed?'▸':'▾'}</span></div>
     <div class="console-body">
-      <div class="cg"><label>强制结果</label><div class="cbtns">
-        <button class="cbtn ${state.force==='success'?'active':''}" data-force="success">成功</button>
-        <button class="cbtn ${state.force==='fail'?'active':''}" data-force="fail">失败</button>
-        <button class="cbtn ${state.force==='3ds'?'active':''}" data-force="3ds">触发 3DS</button>
-      </div></div>
-      <div class="cg"><label>失败原因（强制结果=失败 时生效）</label>
-        <select class="csel" id="c-failreason">
-          <option value="risk" ${state.failReason==='risk'?'selected':''}>ZFWG00007 · 风险拒付</option>
-          <option value="expiry" ${state.failReason==='expiry'?'selected':''}>ZFZF00013 · 有效期无效</option>
-          <option value="cvv" ${state.failReason==='cvv'?'selected':''}>ZFZF00011 · CVV 错误</option>
-          <option value="tds3" ${state.failReason==='tds3'?'selected':''}>ZF3D00004 · 3DS 认证失败</option>
-        </select>
-      </div>
-      <div class="cg"><label>3DS 开关（独立）</label>
-        <div class="switch"><div class="toggle ${state.tds3on?'on':''}" id="tds3-toggle"></div><span>${state.tds3on?'开启':'关闭'}</span></div>
-      </div>
       <div class="cg"><label>对接方式</label>
         <select class="csel" id="c-int">
           ${(isExternal()?supportedIntegrations(state.builder):CONFIG.integrations).map(i=>`<option value="${i}" ${state.integration===i?'selected':''}>${iLabels[i]}</option>`).join('')}
@@ -1074,56 +1039,22 @@ function renderConsole(){
   bindConsole();
 }
 
-/* ---------- 弹层 / 状态机 ---------- */
+/* ---------- 弹层 ----------
+   已移除成功/失败/3DS 仿真结果流程（价值低、易被冒充真实支付页）；
+   支付按钮仅弹一条明确的"演示不扣款"提示。3DS 卖点由能力总览承载。 */
 function renderOverlay(){
   const root=document.getElementById('overlay-root');
   if(!state.overlay){root.innerHTML='';return;}
-  let html='';
-  if(state.overlay==='processing'){
-    html=`<div class="modal"><div class="spinner"></div><h3>${T('processing')}</h3></div>`;
-  } else if(state.overlay==='tds3-loading'){
-    html=`<div class="modal"><div class="spinner"></div><h3>${T('tds3Title')}</h3><p>${T('tds3Desc')}</p></div>`;
-  } else if(state.overlay==='tds3-verify'){
-    html=`<div class="modal">
-      <div class="tds-bar">🔐 ${T('tds3Verify')}</div>
-      <div class="spinner"></div>
-      <p>模拟银行 3DS 校验页（OTP）…</p>
-      <div class="acts">
-        <button class="btn-ghost" id="tds3-leave-btn">${T('leave')}</button>
-        <button class="btn-primary" id="tds3-complete">${T('continue')}</button>
-      </div>
-    </div>`;
-  } else if(state.overlay==='tds3-leave'){
-    html=`<div class="modal">
-      <div class="ic info">!</div>
-      <h3>${T('tds3Leave')}</h3><p>${T('tds3LeaveDesc')}</p>
-      <div class="acts">
-        <button class="btn-ghost" id="tds3-confirm-leave">${T('leave')}</button>
-        <button class="btn-primary" id="tds3-stay">${T('stay')}</button>
-      </div>
-    </div>`;
-  } else if(state.overlay==='success'){
-    html=`<div class="modal">
-      <div class="ic ok">✓</div>
-      <h3>${T('successTitle')}</h3><p>${T('successDesc')}</p>
-      <div class="acts"><button class="btn-primary" id="ov-back">${T('backShop')}</button></div>
-    </div>`;
-  } else if(state.overlay==='fail'){
-    const f=FAIL_CODES[state.failReason]||FAIL_CODES.risk;
-    const msg = state.lang==='zh'?f.zh:f.en;
-    const btnLabel = state.lang==='zh'?f.btnZh:f.btnEn;
-    html=`<div class="modal fail-modal">
-      <div class="fail-head">
-        <span class="ic-sm">✕</span>
-        <h3>${T('failTitle')}</h3>
-        <span class="fail-x" id="ov-close">✕</span>
-      </div>
-      <div class="fail-msg">${msg}<span class="code">【${f.code}】</span></div>
-      <button class="fail-btn-wide" id="ov-retry">${btnLabel}</button>
-    </div>`;
-  }
-  // 防滥用：每个结果弹窗顶部强制打上"演示模拟"标签（防止只截弹窗冒充真实交易结果）
-  html = html.replace(/(<div class="modal[^"]*">)/, `$1<div class="modal-demo">${T('modalDemo')}</div>`);
+  const html=`<div class="modal">
+    <div class="modal-demo">${T('modalDemo')}</div>
+    <div class="ic info">ℹ</div>
+    <h3>${T('demoNoticeTitle')}</h3>
+    <p>${T('demoNoticeDesc')}</p>
+    <div class="acts">
+      <button class="btn-ghost" id="ov-back">${T('backShop')}</button>
+      <button class="btn-primary" id="ov-ok">${T('ok')}</button>
+    </div>
+  </div>`;
   root.innerHTML=`<div class="overlay">${html}</div>`;
   bindOverlay();
 }
@@ -1165,64 +1096,21 @@ function startCheckout(){
 }
 
 // 提交支付 → 测试卡校验 → 状态机
+// 点击支付：仅弹"演示不扣款"提示，不做任何成功/失败/3DS 仿真
 function submitPay(){
-  // 仅卡支付校验测试卡号
-  const pm=CONFIG.paymentMethods.find(p=>p.id===state.selectedPM);
-  if(pm && pm.type==='card'){
-    const inp=document.getElementById('card-num');
-    const val=inp?inp.value.replace(/\s/g,''):'';
-    if(val && val!=='4242424242424242'){
-      alert(T('testCardTip')); return;
-    }
-  }
-  runStateMachine();
-}
-
-function runStateMachine(){
-  const result=state.force;
-  if(result==='3ds' && state.tds3on){
-    // 3DS 三段：loading 提示 → 校验页 →（离开挽留）→ 完成
-    state.overlay='tds3-loading'; render();
-    setTimeout(()=>{state.overlay='tds3-verify';render();},1200);
-    return;
-  }
-  // 成功/失败（含 3DS 但开关关闭时跳过直接走结果）
-  state.overlay='processing'; render();
-  setTimeout(()=>{
-    state.overlay = result==='fail' ? 'fail' : 'success';
-    render();
-  },1100);
+  state.overlay='notice'; render();
 }
 
 function bindOverlay(){
   const back=document.getElementById('ov-back');
   if(back) back.onclick=()=>{state.overlay=null;state.flow='shop';render();};
-  const close=document.getElementById('ov-close');
-  if(close) close.onclick=()=>{state.overlay=null;render();};
-  // 失败弹窗单按钮：关闭并回到收银台由用户自行修正（非自动重试）
-  const retry=document.getElementById('ov-retry');
-  if(retry) retry.onclick=()=>{state.overlay=null;render();};
-  // 3DS 校验页：点完成 → 处理 → 成功；点离开 → 挽留
-  const comp=document.getElementById('tds3-complete');
-  if(comp) comp.onclick=()=>{
-    state.overlay='processing'; render();
-    setTimeout(()=>{state.overlay = state.force==='fail'?'fail':'success';render();},1000);
-  };
-  const leave=document.getElementById('tds3-leave-btn');
-  if(leave) leave.onclick=()=>{state.overlay='tds3-leave';render();};
-  const stay=document.getElementById('tds3-stay');
-  if(stay) stay.onclick=()=>{state.overlay='tds3-verify';render();};
-  const confLeave=document.getElementById('tds3-confirm-leave');
-  if(confLeave) confLeave.onclick=()=>{state.overlay=null;render();};
+  const ok=document.getElementById('ov-ok');
+  if(ok) ok.onclick=()=>{state.overlay=null;render();};
 }
 
 function bindConsole(){
   const head=document.getElementById('console-head');
   if(head) head.onclick=()=>{state.consoleCollapsed=!state.consoleCollapsed;render();};
-  document.querySelectorAll('[data-force]').forEach(el=>el.onclick=()=>{state.force=el.dataset.force;render();});
-  const fr=document.getElementById('c-failreason'); if(fr) fr.onchange=()=>{state.failReason=fr.value;render();};
-  const tg=document.getElementById('tds3-toggle');
-  if(tg) tg.onclick=()=>{state.tds3on=!state.tds3on;render();};
   const ci=document.getElementById('c-int'); if(ci) ci.onchange=()=>{state.integration=ci.value;state.flow='shop';render();};
   const cb=document.getElementById('c-builder'); if(cb) cb.onchange=()=>{state.builder=cb.value;applyEditionFallback();state.flow='shop';render();};
   const ccur=document.getElementById('c-cur'); if(ccur) ccur.onchange=()=>{state.currency=ccur.value;render();};
@@ -1243,7 +1131,7 @@ function resetAll(){
     mode:"experience",builder:"WooCommerce",integration:"redirect",perspective:"buyer",
     lang:"zh",device:"desktop",currency:"USD",region:"BR",flow:"shop",
     show:{header:true,order:true},
-    selectedPM:"googlepay",force:"success",failReason:"risk",tds3on:true,overlay:null,codeOpen:false
+    selectedPM:"googlepay",overlay:null,codeOpen:false
   });
   applyEditionFallback();
   render();
