@@ -146,6 +146,7 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .host-mer{background:#FEF3C7;color:#92400E}
 @media(max-width:640px){.mbody{flex-direction:column}.mcol-pay{border-right:none;border-bottom:1px solid var(--line)}}
 .embed-tag{font-size:11px;color:var(--accent);font-weight:700;padding:4px 8px}
+.api-note{font-size:12px;color:#92400E;background:#FEF3C7;border-radius:8px;padding:9px 12px;margin-bottom:14px;line-height:1.5}
 
 .co{background:transparent}
 /* ===== 托管收银台"整页"外壳（灰底 + 全宽白头 + 居中内容列，照真实生产 §A.2） ===== */
@@ -460,6 +461,7 @@ const CONFIG = {
       msSubtotal:"小计", msShipping:"运费", msFreeShip:"免运费", msTotal:"合计",
       tagEmbedded:"飞来汇内嵌 iframe", tagEmbeddedNote:"FLYWAY EMBEDDED IFRAME · 合并卡 · 页内嵌入不跳转",
       tagApi:"商户自绘 · 拆分卡 · 商户直接收卡号（PCI 最大）", tagElement:"仅卡字段为飞来汇托管合并控件",
+      apiNote:"此结账页完全由商户自行开发；飞来汇仅提供后端支付 API，不提供任何前端界面或配置项。",
       cardInfo:"卡片信息", expMMYY:"月/年",
       successTitle:"支付成功", successDesc:"您的演示订单已完成（模拟）。",
       failTitle:"支付失败", retry:"重试", close:"关闭",
@@ -507,6 +509,7 @@ const CONFIG = {
       msSubtotal:"Subtotal", msShipping:"Shipping", msFreeShip:"Free", msTotal:"Total",
       tagEmbedded:"Flyway embedded iframe", tagEmbeddedNote:"FLYWAY EMBEDDED IFRAME · merged card · embedded in-page, no redirect",
       tagApi:"Merchant-rendered · split card · merchant collects PAN (max PCI)", tagElement:"Only the card field is a Flyway-hosted merged control",
+      apiNote:"This checkout page is fully built by the merchant; Flyway provides only the backend payment API — no front-end UI or configuration.",
       cardInfo:"Card information", expMMYY:"MM / YY",
       successTitle:"Payment successful", successDesc:"Your demo order is complete (simulated).",
       failTitle:"Payment failed", retry:"Retry", close:"Close",
@@ -701,10 +704,13 @@ function checkoutView(){
       ${poweredBy()}
     </div>`;
   } else if(state.integration==='api'){
+    // API 直连：前端 100% 商户自建，飞来汇仅提供后端 API —— 不出现任何飞来汇界面/配置项
+    const a=amountStr();
     payInner=`<div class="mcol-pay">
       <div class="mtitle-row"><h3>${T('msPayMethod')}</h3><span class="host-tag host-mer">${T('tagApi')}</span></div>
-      <div class="pm-card" style="padding:0">${pmList()}</div>
-      ${bigPayBtn()}
+      <div class="api-note">🛠 ${T('apiNote')}</div>
+      ${cardForm()}
+      <div class="submit-box"><button class="submit-btn" id="pay-btn">${T('pay')} ${a.code} ${a.int}${a.dec}</button></div>
       ${poweredBy()}
     </div>`;
   } else { // element
