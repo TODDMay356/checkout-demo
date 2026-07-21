@@ -257,6 +257,26 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 pre.code{background:#0F172A;color:#E2E8F0;border-radius:10px;padding:14px;font-size:12px;overflow:auto;margin-top:10px;line-height:1.6;display:none}
 pre.code.open{display:block}
 .sdk-note{margin-top:12px;font-size:12px;color:var(--text-muted);background:var(--accent-soft);padding:10px 12px;border-radius:8px}
+/* 支付流程图（原商户视角） */
+.flowview{max-width:640px}
+.flow-badge{display:inline-block;background:var(--accent-soft);color:var(--accent);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;margin-bottom:16px}
+.flow-legend{display:flex;gap:14px;margin-bottom:20px;font-size:12px;color:var(--text-muted)}
+.flow-legend .lg{display:flex;align-items:center;gap:6px}
+.flow-legend .lg::before{content:"";width:10px;height:10px;border-radius:50%;display:inline-block}
+.flow-legend .lg-m::before{background:#0EA5E9}
+.flow-legend .lg-f::before{background:var(--accent)}
+.flow{display:flex;flex-direction:column}
+.flow-node{display:flex;gap:14px;align-items:flex-start;position:relative;padding-bottom:26px}
+.flow-node:last-child{padding-bottom:0}
+.flow-node:not(:last-child)::after{content:"";position:absolute;left:15px;top:34px;bottom:2px;width:2px;background:var(--line-regular)}
+.flow-num{width:32px;height:32px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:14px;position:relative;z-index:1}
+.n-merchant .flow-num{background:#0EA5E9}
+.n-flyway .flow-num{background:var(--accent)}
+.flow-body{padding-top:3px}
+.flow-who{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px}
+.n-merchant .flow-who{background:#E0F2FE;color:#0369A1}
+.n-flyway .flow-who{background:var(--accent-soft);color:var(--accent)}
+.flow-label{margin-top:7px;font-size:15px;color:var(--text);line-height:1.5}
 
 /* 能力总览 */
 .overview{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
@@ -407,7 +427,7 @@ const CONFIG = {
     zh:{
       experience:"体验模式", overview:"能力总览",
       builder:"建站工具", integration:"对接方式", view:"视角",
-      buyer:"买家视角", merchant:"商户视角",
+      buyer:"收银台预览", merchant:"支付流程",
       lang:"语言", device:"设备", desktop:"桌面", phone:"手机",
       region:"买家地区", regionNote:"演示用，实际以商户开通及路由为准",
       checkout:"去结算", payTo:"付给",
@@ -451,7 +471,7 @@ const CONFIG = {
     en:{
       experience:"Experience", overview:"Capabilities",
       builder:"Builder", integration:"Integration", view:"View",
-      buyer:"Buyer", merchant:"Merchant",
+      buyer:"Checkout preview", merchant:"Payment flow",
       lang:"Language", device:"Device", desktop:"Desktop", phone:"Phone",
       region:"Buyer region", regionNote:"For demo purposes only; actual availability depends on merchant setup and routing.",
       checkout:"Checkout", payTo:"Pay to",
@@ -900,47 +920,51 @@ function googlePayLogo(){
 }
 
 /* ---------- 商户视角（集成概览） ---------- */
+/* 支付流程图（原"商户视角"改为：给商户看的下单/支付流程，按四种对接方式各不同） */
+const FLOWS={
+  redirect:{badge:{zh:"买家离站 · 唯一整页跳转形态 · 商户 PCI 最小",en:"Buyer leaves site · full-page redirect · minimal merchant PCI"},steps:[
+    {w:"m",zh:"买家在商户网站下单",en:"Buyer places the order on the merchant site"},
+    {w:"f",zh:"跳转到飞来汇托管收银台（离站）",en:"Redirect to the Flyway-hosted checkout (off-site)"},
+    {w:"f",zh:"买家在托管页完成支付",en:"Buyer completes payment on the hosted page"},
+    {w:"m",zh:"支付后自动跳回商户网站",en:"Auto-return to the merchant site after payment"},
+    {w:"m",zh:"商户通过回调/查询获知支付结果",en:"Merchant learns the result via callback / query"}
+  ]},
+  embedded:{badge:{zh:"不离站 · 页内 iframe 嵌入 · 商户 PCI 小",en:"Stays on-site · in-page iframe · small merchant PCI"},steps:[
+    {w:"m",zh:"买家在商户网站下单",en:"Buyer places the order on the merchant site"},
+    {w:"f",zh:"商户页内嵌入飞来汇 iframe（不离站）",en:"Flyway iframe is embedded in the merchant page (on-site)"},
+    {w:"f",zh:"买家在当前页完成支付",en:"Buyer completes payment on the same page"},
+    {w:"m",zh:"商户通过回调/查询获知支付结果",en:"Merchant learns the result via callback / query"}
+  ]},
+  api:{badge:{zh:"不离站 · 商户直接收卡号 · 商户 PCI 最大",en:"Stays on-site · merchant collects the PAN · maximum merchant PCI"},steps:[
+    {w:"m",zh:"买家在商户网站下单",en:"Buyer places the order on the merchant site"},
+    {w:"m",zh:"商户自绘表单收集买家卡信息",en:"Merchant's own form collects the buyer's card details"},
+    {w:"m",zh:"商户后端调用飞来汇 API 提交支付",en:"Merchant backend submits the payment via the Flyway API"},
+    {w:"f",zh:"飞来汇处理并返回支付结果",en:"Flyway processes and returns the payment result"}
+  ]},
+  element:{badge:{zh:"不离站 · 仅卡字段为飞来汇托管 · 商户 PCI 最小",en:"Stays on-site · only the card field is Flyway-hosted · minimal merchant PCI"},steps:[
+    {w:"m",zh:"买家在商户网站下单",en:"Buyer places the order on the merchant site"},
+    {w:"f",zh:"商户页嵌入飞来汇卡字段合并控件",en:"Flyway's merged card control is embedded in the merchant page"},
+    {w:"f",zh:"买家在控件内输入卡信息（飞来汇托管）",en:"Buyer enters card details inside the hosted control"},
+    {w:"m",zh:"提交后商户获知支付结果",en:"After submit, the merchant learns the payment result"}
+  ]}
+};
 function merchantView(){
   const iLabels={redirect:"跳转 Redirect",embedded:"内嵌 Embedded",api:"API 直连",element:"Element"};
-  const code=mockCode();
-  return `<div class="merch">
-    <h3>${T('mvOverview')} · ${state.builder.replace(/\(.*\)/,'')} × ${iLabels[state.integration]}</h3>
-    <div class="steps">
-      <div class="step"><div class="n">1</div><h4>${T('merStep1Title')}</h4><p>${T('merStep1')}</p></div>
-      <div class="step"><div class="n">2</div><h4>${T('merStep2Title')}</h4><p>${T('merStep2')}</p></div>
-      <div class="step"><div class="n">3</div><h4>${T('merStep3Title')}</h4><p>${T('merStep3')}</p></div>
-    </div>
-    <div class="code-toggle" id="code-toggle">${state.codeOpen?'▾ '+T('hideCode'):'▸ '+T('showCode')}</div>
-    <pre class="code ${state.codeOpen?'open':''}">${code}</pre>
-    <div class="sdk-note">💡 ${T('sdkNote')}　｜　${T('mvFieldNote')}</div>
+  const zh=state.lang==='zh';
+  const flow=FLOWS[state.integration];
+  const nodes=flow.steps.map((s,i)=>{
+    const who = s.w==='m' ? (zh?'商户':'Merchant') : 'FlyPay';
+    return `<div class="flow-node ${s.w==='m'?'n-merchant':'n-flyway'}">
+      <div class="flow-num">${i+1}</div>
+      <div class="flow-body"><span class="flow-who">${who}</span><div class="flow-label">${zh?s.zh:s.en}</div></div>
+    </div>`;
+  }).join('');
+  return `<div class="merch flowview">
+    <h3>${zh?'支付流程':'Payment flow'} · ${state.builder.replace(/\(.*\)/,'')} × ${iLabels[state.integration]}</h3>
+    <div class="flow-badge">${zh?flow.badge.zh:flow.badge.en}</div>
+    <div class="flow-legend"><span class="lg lg-m">${zh?'商户':'Merchant'}</span><span class="lg lg-f">FlyPay</span></div>
+    <div class="flow">${nodes}</div>
   </div>`;
-}
-
-// 禁编真实 API 字段名/域名/文档链接 —— 全部 <占位>
-function mockCode(){
-  const map={
-    redirect:`// 跳转 Redirect（合并卡 · 飞来汇托管）
-const order = await flyway.create({
-  amount: <占位>, currency: "<占位>",
-  return_url: "<占位>"            // 以官方文档为准
-});
-window.location.href = order.<占位_checkout_url>;`,
-    embedded:`// 内嵌 Embedded（合并卡 · iframe 不离站）
-flyway.embedded.mount("#checkout", {
-  client_secret: "<占位>",        // 以官方文档为准
-  appearance: { /* <占位> */ }
-});`,
-    api:`// API 直连（拆分卡 · 商户自绘 · PCI 范围最大）
-const res = await flyway.confirm({
-  number: "<占位>", exp: "<占位>", cvv: "<占位>",
-  holder: "<占位>"                 // 以官方文档为准
-});`,
-    element:`// Element（合并安全控件 · 仅卡字段托管）
-const card = flyway.elements.create("card"); // 合并控件，禁拆分
-card.mount("#card-element");
-await flyway.confirmCard(card, { /* <占位> */ });`
-  };
-  return map[state.integration];
 }
 
 /* ---------- §10 能力总览 ---------- */
