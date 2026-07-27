@@ -163,6 +163,15 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .pd-desc{font-size:12px;color:var(--text-muted);line-height:1.7}
 .powered{font-size:11px;color:var(--text-muted);text-align:center;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:5px}
 .pay-h{font-size:15px;color:var(--brand-ink);margin:0 0 16px;font-weight:700}
+/* Element 商品页右侧「购买框」：商户呈现金额 + 内嵌飞来汇 Element */
+.buybox{position:sticky;top:16px;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(16,24,40,.05);background:#fff}
+.buybox-order{display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.buybox-order .bo-item{font-size:13px;color:var(--text-secondary)}
+.buybox-order .bo-total{font-size:14px;color:var(--text-muted)}
+.buybox-order .bo-total b{font-size:20px;color:var(--brand-ink);margin-left:6px;font-weight:800}
+.el-inline-note{display:flex;gap:7px;align-items:flex-start;font-size:11px;color:var(--text-muted);line-height:1.6;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
+.el-inline-note svg{flex:0 0 auto;margin-top:2px}
+@media(max-width:640px){.buybox{position:static}}
 .mtitle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .mtitle-row h3{margin:0;font-size:15px;color:var(--brand-ink)}
 .host-tag{font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px}
@@ -518,6 +527,9 @@ const CONFIG = {
       pdTitle:"商品详情",
       pd1:"跨境正品，官方渠道采购", pd2:"全球直发，支持多币种结算", pd3:"7 天无理由退货，售后无忧",
       pdDesc:"这是用于演示收银台的示例商品，上述图片与详情均为占位内容，实际以商户商品页为准。",
+      elStay:"无需跳转 · 就在本商品页完成支付", elCrumbHome:"首页", elCrumbAll:"全部商品",
+      elBuyTitle:"下单并支付", elInlineNote:"以上为飞来汇 Element 内嵌支付控件：支付在本商品页内直接完成，买家无需跳转到收银台或第三方页面。",
+      elItemQty:"演示商品 × 1",
       apiPci:"注意：API 直连由商户前端直接采集卡号，商户需自行取得并维护 PCI DSS 合规证书。", apiHostTag:"商户自绘 · 需 PCI 证书",
       cardInfo:"卡片信息", expMMYY:"月/年",
       successTitle:"支付成功", successDesc:"您的演示订单已完成（模拟）。",
@@ -574,6 +586,9 @@ const CONFIG = {
       pdTitle:"Product details",
       pd1:"Authentic goods sourced via official channels", pd2:"Ships worldwide, multi-currency checkout", pd3:"7-day no-reason returns",
       pdDesc:"This is a sample product for the checkout demo; the image and details are placeholders — actual content comes from the merchant's product page.",
+      elStay:"No redirect — pay right on this product page", elCrumbHome:"Home", elCrumbAll:"All products",
+      elBuyTitle:"Order & pay", elInlineNote:"Above is the embedded Flyway Element: payment completes right on this product page — the buyer never gets redirected to a checkout or third-party page.",
+      elItemQty:"Sample product × 1",
       apiPci:"Note: with API direct integration the merchant's own front-end collects the card number, so the merchant must obtain and maintain PCI DSS certification.", apiHostTag:"Merchant-rendered · PCI cert required",
       cardInfo:"Card information", expMMYY:"MM / YY",
       successTitle:"Payment successful", successDesc:"Your demo order is complete (simulated).",
@@ -776,10 +791,18 @@ function checkoutView(){
       ${inlineElementBody('api')}
       <div class="pay-footnote">${T('apiPci')}</div>
     </div>`;
-  } else { // element（主推）：3 种支付方式平铺手风琴 —— 选卡支付展开卡输入框，选钱包展开对应支付按钮
+  } else { // element（主推）：商品页右侧「购买框」内嵌飞来汇 Element —— 页内直接支付，免跳转
+    const a=amountStr();
     payInner=`<div class="mcol-pay">
-      <h3 class="pay-h">${T('msPayMethod')}</h3>
-      ${elementAccordion()}
+      <div class="buybox">
+        <div class="buybox-order">
+          <span class="bo-item">${T('elItemQty')}</span>
+          <span class="bo-total">${T('msTotal')} <b>${a.sym}${a.int}${a.dec}</b></span>
+        </div>
+        <h3 class="pay-h">${T('msPayMethod')}</h3>
+        ${elementAccordion()}
+        <div class="el-inline-note">${flyLogoSVG(12)} ${T('elInlineNote')}</div>
+      </div>
     </div>`;
   }
   return merchantShell(payInner);
@@ -853,23 +876,61 @@ function merchantDomain(){
 // + 左「商品/订单」 / 右「收银」两栏（同一张商户结账页内，无硬分界）
 function merchantShell(payInner){
   const name=state.builder.replace(/\(.*\)/,'');
+  const isEl=state.integration==='element';
+  // Element = 商户「商品详情页」（页内直接支付，免跳转）；内嵌/API = 商户「结账页」
+  const path = isEl ? '/products/demo-item' : '/checkout';
+  const stay = isEl ? T('elStay') : T('msStay');
+  const head = isEl
+    ? `<div class="mnav"><span>${T('elCrumbHome')}</span><span>${T('elCrumbAll')}</span><span>🛒 ${T('msNavCart')}</span></div>`
+    : `<div class="mnav"><span>${T('msNavHome')}</span><span>${T('msNavAll')}</span><span>${T('msNavCart')}</span></div><div class="secure">🔒 ${T('msSecureCheckout')}</div>`;
+  const crumb = isEl
+    ? `<span>${T('elCrumbHome')}</span><i>›</i><span>${T('elCrumbAll')}</span><i>›</i><b>${T('shopTitle')}</b>`
+    : `<span>${T('msNavCart')}</span><i>›</i><b>${T('msSecureCheckout')}</b>`;
+  const leftCol = isEl ? productPage() : orderSummary();
   return `<div class="mshell">
     <div class="browser">
       <div class="dots"><i></i><i></i><i></i></div>
-      <div class="url">🔒 <b>https://${merchantDomain()}</b>/checkout</div>
-      <span class="stay"><i class="live-dot"></i>${T('msStay')}</span>
+      <div class="url">🔒 <b>https://${merchantDomain()}</b>${path}</div>
+      <span class="stay"><i class="live-dot"></i>${stay}</span>
     </div>
     <div class="mpage">
       <div class="mhead">
         <div class="mlogo">${name}</div>
-        <div class="mnav"><span>${T('msNavHome')}</span><span>${T('msNavAll')}</span><span>${T('msNavCart')}</span></div>
-        <div class="secure">🔒 ${T('msSecureCheckout')}</div>
+        ${head}
       </div>
-      <div class="mcrumb"><span>${T('msNavCart')}</span><i>›</i><b>${T('msSecureCheckout')}</b></div>
+      <div class="mcrumb">${crumb}</div>
       <div class="mbody">
-        ${orderSummary()}
+        ${leftCol}
         ${payInner}
       </div>
+    </div>
+  </div>`;
+}
+
+/* Element 用左栏 = 商户商品详情页（商品介绍 + 商品详情，无结账小结——金额在右侧购买框由商户呈现） */
+function productPage(){
+  const a=amountStr();
+  return `<div class="mcol-sum">
+    <div class="prod-hero">
+      <div class="prod-gallery">
+        <div class="prod-img prod-img-lg"></div>
+        <div class="prod-thumbs"><i></i><i></i><i></i></div>
+      </div>
+      <div class="prod-intro">
+        <div class="prod-title">${T('shopTitle')}</div>
+        <div class="prod-rating"><span class="stars">★★★★★</span> ${T('prodRating')}</div>
+        <div class="prod-sell">${T('prodSell')}</div>
+        <div class="prod-price">${a.sym}${a.int}${a.dec}</div>
+        <div class="prod-tags"><span>${T('tagFree')}</span><span>${T('tagAuthentic')}</span><span>${T('tagReturns')}</span></div>
+      </div>
+    </div>
+    <div class="prod-detail">
+      <div class="pd-title">${T('pdTitle')}</div>
+      <ul class="pd-list">
+        <li>${T('pd1')}</li><li>${T('pd2')}</li><li>${T('pd3')}</li>
+      </ul>
+      <div class="pd-imgs"><span></span><span></span></div>
+      <div class="pd-desc">${T('pdDesc')}</div>
     </div>
   </div>`;
 }
