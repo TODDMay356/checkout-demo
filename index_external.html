@@ -161,7 +161,7 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .pay-card-head .pm-name{font-size:14px;font-weight:600;color:var(--text)}
 .pay-card-head .pc-brands{margin-left:auto;display:flex}
 .pay-card-head .pc-brands .cards{margin:0}
-.submit-btn.el-full{min-width:0;width:100%;margin-top:16px}
+.submit-btn.el-full{min-width:0;width:100%;margin-top:16px;background:var(--accent)}
 .el-or{display:flex;align-items:center;gap:12px;margin:18px 2px}
 .el-or .l{flex:1;height:1px;background:var(--line-regular)}
 .el-or .t{font-size:12px;color:var(--text-muted);white-space:nowrap}
@@ -486,7 +486,7 @@ const CONFIG = {
       tagApi:"商户自绘 · 拆分卡 · 商户直接收卡号（PCI 最大）", tagElement:"仅卡字段为飞来汇托管合并控件",
       apiNote:"此结账页完全由商户自行开发；飞来汇仅提供后端支付 API，不提供任何前端界面或配置项。",
       elInline:"就在本页完成支付 · 无需跳转", elFrameTag:"Flyway Element · 内嵌于商户结账页的合并支付控件",
-      elOr:"或使用以下方式快捷支付", elCardTitle:"银行卡", elRecommend:"主推",
+      elOr:"或使用以下方式快捷支付", elCardTitle:"银行卡", elRecommend:"主推", payNow:"立即支付",
       apiPci:"注意：API 直连由商户前端直接采集卡号，商户需自行取得并维护 PCI DSS 合规证书。", apiHostTag:"商户自绘 · 需 PCI 证书",
       cardInfo:"卡片信息", expMMYY:"月/年",
       successTitle:"支付成功", successDesc:"您的演示订单已完成（模拟）。",
@@ -537,7 +537,7 @@ const CONFIG = {
       tagApi:"Merchant-rendered · split card · merchant collects PAN (max PCI)", tagElement:"Only the card field is a Flyway-hosted merged control",
       apiNote:"This checkout page is fully built by the merchant; Flyway provides only the backend payment API — no front-end UI or configuration.",
       elInline:"Pay right here — no redirect", elFrameTag:"Flyway Element · merged payment control embedded in the merchant checkout page",
-      elOr:"Or pay faster with", elCardTitle:"Card", elRecommend:"Recommended",
+      elOr:"Or pay faster with", elCardTitle:"Card", elRecommend:"Recommended", payNow:"Pay now",
       apiPci:"Note: with API direct integration the merchant's own front-end collects the card number, so the merchant must obtain and maintain PCI DSS certification.", apiHostTag:"Merchant-rendered · PCI cert required",
       cardInfo:"Card information", expMMYY:"MM / YY",
       successTitle:"Payment successful", successDesc:"Your demo order is complete (simulated).",
@@ -751,7 +751,7 @@ function checkoutView(){
 /* Element / API 直连：Stripe 式内嵌收银控件
    —— 银行卡在前（展开表单，主付款方式），Apple/Google Pay 在后（直接显示品牌按钮，无文案提示） */
 function inlineElementBody(mode){
-  const a=amountStr();
+  // 金额不在收银控件内呈现——金额由商户自己在订单摘要里展示；支付按钮是商户自有按钮（对齐 Stripe/Airwallex Element 实践）
   const cardTitle = state.lang==='zh' ? T('cardLabel') : 'Card';
   return `<div class="el-body">
     <div class="pay-card">
@@ -762,7 +762,7 @@ function inlineElementBody(mode){
       </div>
       ${cardForm()}
     </div>
-    <button class="submit-btn js-pay el-full" data-pay="card">${T('pay')} ${a.code} ${a.int}${a.dec}</button>
+    <button class="submit-btn js-pay el-full" data-pay="card">${T('payNow')}</button>
     <div class="el-or"><span class="l"></span><span class="t">${T('elOr')}</span><span class="l"></span></div>
     <div class="el-wallets">
       <button class="wallet-express js-pay" data-pay="applepay">${applePayLogo()}<span class="wb-txt">Pay</span></button>
