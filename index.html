@@ -250,6 +250,11 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .lpm-field input{border:1px solid var(--line-regular);border-radius:var(--radius-m);height:48px;padding:0 12px;font-size:14px;color:var(--text);outline:none}
 .lpm-field input:focus{border-color:var(--accent)}
 .lpm-field input[readonly]{background:#f7f7f9;color:var(--text-muted)}
+/* 拆分卡「卡号」框：卡组织图标放在输入框内右侧（与合并卡一致） */
+.lpm-num-wrap{display:flex;align-items:center;gap:8px;border:1px solid var(--line-regular);border-radius:var(--radius-m);height:48px;padding:0 12px}
+.lpm-num-wrap:focus-within{border-color:var(--accent)}
+.lpm-num-wrap input{border:none;outline:none;flex:1;min-width:0;height:100%;font-size:14px;background:transparent;color:var(--text)}
+.lpm-num-wrap .brand-ico{margin-left:auto}
 
 /* 提交按钮 */
 .submit-box{display:flex;justify-content:center;width:100%;margin:20px 0 0}
@@ -758,7 +763,6 @@ function inlineElementBody(mode){
       <div class="pay-card-head">
         <span class="payment-icon">${pmIcon('card')}</span>
         <span class="pm-name">${cardTitle}</span>
-        <span class="pc-brands">${mode==='api'?cardBrandsStrip():''}</span>
       </div>
       ${cardForm()}
     </div>
@@ -928,7 +932,9 @@ function cardForm(){
         <div class="lpm-field" style="flex:1"><label>${T('lastName')}</label><input placeholder="${T('lastName')}"></div>
         <div class="lpm-field" style="flex:1"><label>${T('firstName')}</label><input placeholder="${T('firstName')}"></div>
       </div>
-      <div class="lpm-field"><label>${T('cardNum')}</label><input id="card-num" placeholder="4242 4242 4242 4242"></div>
+      <div class="lpm-field"><label>${T('cardNum')}</label>
+        <div class="lpm-num-wrap"><input id="card-num" placeholder="4242 4242 4242 4242"><div class="brand-ico">${cardBrandImgs()}</div></div>
+      </div>
       <div class="cg-row" style="gap:10px">
         <div class="lpm-field" style="flex:1"><label>${T('exp')} (MM/YY)</label><input placeholder="MM/YY"></div>
         <div class="lpm-field" style="flex:1"><label>${T('cvv')}</label><input placeholder="CVV"></div>
