@@ -122,46 +122,45 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .mhead .mlogo{font-weight:800;color:var(--brand-ink);font-size:18px;letter-spacing:.3px}
 .mhead .mnav{margin-left:auto;display:flex;gap:18px;font-size:13px;color:var(--text-muted)}
 .mhead .secure{font-size:12px;color:#16A34A;font-weight:600;display:flex;align-items:center;gap:4px}
-.mbody{display:flex;gap:0}
-.mcol-pay{flex:1.3;padding:24px;border-right:1px solid var(--line);min-width:0}
-.mcol-sum{flex:1;padding:24px;background:#FAFBFC;min-width:0}
-.mcol-pay h3,.mcol-sum h3{font-size:15px;color:var(--brand-ink);margin-bottom:14px}
-.osum-item{display:flex;gap:12px;align-items:center;margin-bottom:14px}
-.osum-thumb{width:54px;height:54px;border-radius:8px;background:
-  repeating-linear-gradient(45deg,#F3F4F6,#F3F4F6 8px,#E9EBEF 8px,#E9EBEF 16px);flex:0 0 auto;position:relative}
-.osum-thumb .qty{position:absolute;top:-7px;right:-7px;background:#6B7280;color:#fff;font-size:11px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
-.osum-item .nm{flex:1;font-size:13px}
-.osum-item .pr{font-size:13px;font-weight:700}
-.osum-line{display:flex;justify-content:space-between;font-size:13px;color:var(--text-muted);margin:6px 0}
-.osum-total{display:flex;justify-content:space-between;font-size:17px;font-weight:800;color:var(--brand-ink);border-top:1px solid var(--line);padding-top:12px;margin-top:8px}
-.mform-field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
-.mform-field label{font-size:12px;color:var(--text-muted);font-weight:600}
-.mform-field input{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px}
-.mform-field input:focus{outline:none;border-color:var(--accent)}
-.powered{font-size:11px;color:var(--text-muted);text-align:center;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:5px}
+/* 结账进度面包屑（结构上表明"结账"是商户自有流程中的一步，不是外部页面） */
+.mcrumb{display:flex;align-items:center;gap:8px;padding:12px 26px 0;font-size:12px;color:var(--text-muted)}
+.mcrumb i{color:#C7CAD1}
+.mcrumb b{color:var(--brand-ink)}
+/* 左「商品/订单」 右「收银」——同一张商户结账页，无硬分界（仅用留白 + 轻底色分组） */
+.mbody{display:flex;gap:36px;padding:24px 26px 28px;align-items:flex-start}
+.mcol-sum{flex:0.9;min-width:0}
+.mcol-pay{flex:1.1;min-width:0}
+.prod-card{display:flex;gap:14px;align-items:center;background:#F6F7F9;border-radius:12px;padding:14px;margin-bottom:16px}
+.prod-img{width:76px;height:76px;border-radius:10px;flex:0 0 auto;position:relative;background:
+  repeating-linear-gradient(45deg,#EDEFF3,#EDEFF3 9px,#E2E5EB 9px,#E2E5EB 18px)}
+.prod-img .qty{position:absolute;top:-7px;right:-7px;background:#6B7280;color:#fff;font-size:11px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
+.prod-meta{flex:1;min-width:0}
+.prod-meta .nm{font-size:14px;font-weight:600;color:var(--brand-ink);line-height:1.35}
+.prod-sub{font-size:12px;color:var(--text-muted);margin-top:5px}
+.prod-card .pr{font-size:15px;font-weight:800;color:var(--brand-ink);flex:0 0 auto}
+.osum-line{display:flex;justify-content:space-between;font-size:13px;color:var(--text-muted);margin:8px 2px}
+.osum-total{display:flex;justify-content:space-between;font-size:18px;font-weight:800;color:var(--brand-ink);border-top:1px solid var(--line);padding-top:14px;margin-top:10px}
+.powered{font-size:11px;color:var(--text-muted);text-align:center;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:5px}
+.pay-h{font-size:15px;color:var(--brand-ink);margin:0 0 16px;font-weight:700}
 .mtitle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.mtitle-row h3{margin:0}
+.mtitle-row h3{margin:0;font-size:15px;color:var(--brand-ink)}
 .host-tag{font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px}
 .host-fly{background:var(--accent-soft);color:var(--accent)}
 .host-mer{background:#FEF3C7;color:#92400E}
-@media(max-width:640px){.mbody{flex-direction:column}.mcol-pay{border-right:none;border-bottom:1px solid var(--line)}}
+/* 地址栏"未跳转"实时指示（会呼吸的绿点，非纯文字标签） */
+.browser .stay{display:flex;align-items:center;gap:6px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#16A34A;display:inline-block;box-shadow:0 0 0 0 rgba(22,163,74,.5);animation:livePulse 1.8s infinite}
+@keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.5)}70%{box-shadow:0 0 0 6px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
+@media(max-width:640px){.mbody{flex-direction:column;gap:24px}.mcrumb{padding:12px 16px 0}}
 .embed-tag{font-size:11px;color:var(--accent);font-weight:700;padding:4px 8px}
-.api-note{font-size:12px;color:#92400E;background:#FEF3C7;border-radius:8px;padding:9px 12px;margin-bottom:14px;line-height:1.5}
-.api-pci{font-size:12px;color:#9A3412;background:#FFF1E6;border:1px solid #FED7AA;border-radius:8px;padding:9px 12px;margin-bottom:16px;line-height:1.5;font-weight:600}
 
-/* ===== Element（主推）/ API 直连：Stripe 式内嵌收银控件 ===== */
-.el-inline-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#0F7B4F;background:#E7F7EF;border:1px solid #B6E7CF;border-radius:20px;padding:4px 12px;margin-bottom:14px}
-.el-frame{border:1px solid var(--line-regular);border-radius:14px;padding:16px;background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.05)}
-.el-frame-tag{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--accent);margin:-2px 0 14px}
-.el-frame-tag svg{display:block}
+/* ===== Element（主推）/ API 直连：内嵌于商户结账页的收银区（无框、无硬分界，融入商户页面） ===== */
 .el-body{display:flex;flex-direction:column}
-.el-card-block{border:1.5px solid var(--accent);border-radius:12px;background:var(--accent-soft);padding:16px}
-.el-card-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.el-card-head .payment-icon{width:28px;height:20px}
-.el-card-head .pm-name{font-size:15px;font-weight:600;color:var(--text)}
-.el-card-head .cards{margin-left:auto}
-.el-card-block .card-group,.el-card-block .lpm-form{background:#fff;border-radius:var(--radius-m)}
-.el-card-block .lpm-form{padding:0}
+.pay-card-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.pay-card-head .payment-icon{width:28px;height:20px}
+.pay-card-head .pm-name{font-size:14px;font-weight:600;color:var(--text)}
+.pay-card-head .pc-brands{margin-left:auto;display:flex}
+.pay-card-head .pc-brands .cards{margin:0}
 .submit-btn.el-full{min-width:0;width:100%;margin-top:16px}
 .el-or{display:flex;align-items:center;gap:12px;margin:18px 2px}
 .el-or .l{flex:1;height:1px;background:var(--line-regular)}
@@ -170,6 +169,7 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .wallet-express{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;height:48px;border-radius:8px;background:#000;color:#fff;cursor:pointer;border:none}
 .wallet-express .wb-logo{display:block}
 .wallet-express .wb-txt{font-size:18px;font-weight:500;letter-spacing:.2px}
+.pay-footnote{font-size:11px;color:var(--text-muted);margin-top:16px;line-height:1.6;padding-top:12px;border-top:1px dashed var(--line)}
 
 .co{background:transparent}
 /* ===== 托管收银台"整页"外壳（灰底 + 全宽白头 + 居中内容列，照真实生产 §A.2） ===== */
@@ -733,20 +733,16 @@ function checkoutView(){
       ${poweredBy()}
     </div>`;
   } else if(state.integration==='api'){
-    // API 直连：前端 100% 商户自建，飞来汇仅提供后端 API —— 卡在前、AP/GP 直显图标，且需 PCI 证书
+    // API 直连：前端 100% 商户自建 —— 无任何飞来汇界面/框架，纯商户结账表单；卡在前、AP/GP 直显图标；需 PCI 证书
     payInner=`<div class="mcol-pay">
-      <div class="mtitle-row"><h3>${T('msPayMethod')}</h3><span class="host-tag host-mer">${T('apiHostTag')}</span></div>
-      <div class="api-note">🛠 ${T('apiNote')}</div>
-      <div class="api-pci">🔐 ${T('apiPci')}</div>
+      <h3 class="pay-h">${T('msPayMethod')}</h3>
       ${inlineElementBody('api')}
-      ${poweredBy()}
+      <div class="pay-footnote">${T('apiPci')}</div>
     </div>`;
-  } else { // element（主推）：内嵌于商户结账页的合并支付控件，免跳转
+  } else { // element（主推）：仅卡字段为飞来汇托管控件，其余是商户结账页，天然免跳转
     payInner=`<div class="mcol-pay">
-      <div class="mtitle-row"><h3>${T('msPayMethod')}</h3><span class="host-tag host-fly">${T('tagElement')}</span></div>
-      <div class="el-inline-badge">▣ ${T('elInline')}</div>
-      <div class="el-frame"><div class="el-frame-tag">${flyLogoSVG(12)} ${T('elFrameTag')}</div>${inlineElementBody('element')}</div>
-      ${poweredBy()}
+      <h3 class="pay-h">${T('msPayMethod')}</h3>
+      ${inlineElementBody('element')}
     </div>`;
   }
   return merchantShell(payInner);
@@ -758,15 +754,15 @@ function inlineElementBody(mode){
   const a=amountStr();
   const cardTitle = state.lang==='zh' ? T('cardLabel') : 'Card';
   return `<div class="el-body">
-    <div class="el-card-block">
-      <div class="el-card-head">
+    <div class="pay-card">
+      <div class="pay-card-head">
         <span class="payment-icon">${pmIcon('card')}</span>
         <span class="pm-name">${cardTitle}</span>
-        ${mode==='api' ? cardBrandsStrip() : ''}
+        <span class="pc-brands">${mode==='api'?cardBrandsStrip():''}</span>
       </div>
       ${cardForm()}
-      <button class="submit-btn js-pay el-full" data-pay="card">${T('pay')} ${a.code} ${a.int}${a.dec}</button>
     </div>
+    <button class="submit-btn js-pay el-full" data-pay="card">${T('pay')} ${a.code} ${a.int}${a.dec}</button>
     <div class="el-or"><span class="l"></span><span class="t">${T('elOr')}</span><span class="l"></span></div>
     <div class="el-wallets">
       <button class="wallet-express js-pay" data-pay="applepay">${applePayLogo()}<span class="wb-txt">Pay</span></button>
@@ -786,14 +782,15 @@ function merchantDomain(){
   return dmap[bKey(state.builder)]||'shop.merchant-demo.com';
 }
 
-// 商户结账页外壳：模拟浏览器地址栏（商户域名）+ 商户页头 + 左支付 / 右订单摘要
+// 商户结账页外壳：真实浏览器地址栏（商户域名，全程不变=免跳转的结构性证据）+ 商户页头
+// + 左「商品/订单」 / 右「收银」两栏（同一张商户结账页内，无硬分界）
 function merchantShell(payInner){
   const name=state.builder.replace(/\(.*\)/,'');
   return `<div class="mshell">
     <div class="browser">
       <div class="dots"><i></i><i></i><i></i></div>
       <div class="url">🔒 <b>https://${merchantDomain()}</b>/checkout</div>
-      <span class="stay">● ${T('msStay')}</span>
+      <span class="stay"><i class="live-dot"></i>${T('msStay')}</span>
     </div>
     <div class="mpage">
       <div class="mhead">
@@ -801,9 +798,10 @@ function merchantShell(payInner){
         <div class="mnav"><span>${T('msNavHome')}</span><span>${T('msNavAll')}</span><span>${T('msNavCart')}</span></div>
         <div class="secure">🔒 ${T('msSecureCheckout')}</div>
       </div>
+      <div class="mcrumb"><span>${T('msNavCart')}</span><i>›</i><b>${T('msSecureCheckout')}</b></div>
       <div class="mbody">
-        ${payInner}
         ${orderSummary()}
+        ${payInner}
       </div>
     </div>
   </div>`;
@@ -812,10 +810,12 @@ function merchantShell(payInner){
 function orderSummary(){
   const a=amountStr();
   return `<div class="mcol-sum">
-    <h3>${T('msOrderSummary')}</h3>
-    <div class="osum-item">
-      <div class="osum-thumb"><span class="qty">1</span></div>
-      <div class="nm">${T('shopTitle')}</div>
+    <div class="prod-card">
+      <div class="prod-img"><span class="qty">1</span></div>
+      <div class="prod-meta">
+        <div class="nm">${T('shopTitle')}</div>
+        <div class="prod-sub">${T('msSubtotal')} · ${T('msFreeShip')}</div>
+      </div>
       <div class="pr">${a.sym}${a.int}${a.dec}</div>
     </div>
     <div class="osum-line"><span>${T('msSubtotal')}</span><span>${a.sym}${a.int}${a.dec}</span></div>
