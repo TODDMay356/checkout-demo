@@ -611,7 +611,8 @@ const state = {
   show:{header:true, order:true},
   // 体验流程阶段：shop | checkout | redirecting | processing
   flow:"shop",
-  selectedPM:"googlepay",      // 当前选中支付方式（默认 Google Pay，照真源码）
+  selectedPM:"googlepay",      // 跳转/内嵌收银台当前选中支付方式（默认 Google Pay，照真源码）
+  elPM:"card",                 // Element 手风琴当前选中（card/applepay/googlepay，默认卡支付）
   consoleCollapsed:false,
   overlay:null,               // null | notice（仅"演示不扣款"提示）
   codeOpen:false
@@ -775,13 +776,44 @@ function checkoutView(){
       ${inlineElementBody('api')}
       <div class="pay-footnote">${T('apiPci')}</div>
     </div>`;
-  } else { // element（主推）：仅卡字段为飞来汇托管控件，其余是商户结账页，天然免跳转
+  } else { // element（主推）：3 种支付方式平铺手风琴 —— 选卡支付展开卡输入框，选钱包展开对应支付按钮
     payInner=`<div class="mcol-pay">
       <h3 class="pay-h">${T('msPayMethod')}</h3>
-      ${inlineElementBody('element')}
+      ${elementAccordion()}
     </div>`;
   }
   return merchantShell(payInner);
+}
+
+/* Element 手风琴：Card / Apple Pay / Google Pay 三项平铺（卡在前）
+   —— 选中 Card → 展开合并卡输入框 + 商户"立即支付"按钮；选中钱包 → 展开对应黑色支付按钮（即操作，无额外提示） */
+function elementAccordion(){
+  const order=['card','applepay','googlepay'];
+  if(!order.includes(state.elPM)) state.elPM='card';
+  const rows=order.map(id=>{
+    const pm=CONFIG.paymentMethods.find(p=>p.id===id);
+    const sel=state.elPM===id;
+    const label = id==='card' ? T('cardLabel') : pm.label;
+    let content='';
+    if(sel){
+      if(id==='card'){
+        content=`<div class="pm-content">${cardForm()}</div>`;
+      } else {
+        const logo = id==='applepay' ? applePayLogo() : googlePayLogo();
+        content=`<div class="pm-content"><button class="wallet-express js-pay" data-pay="${id}">${logo}<span class="wb-txt">Pay</span></button></div>`;
+      }
+    }
+    return `<div class="pm ${sel?'sel':''}" data-elpm="${id}">
+      <div class="payment-header">
+        <span class="el-rad"></span>
+        <div class="payment-content"><span class="payment-icon">${pmIcon(id)}</span><span class="pm-name">${label}</span></div>
+      </div>
+      ${content}
+    </div>`;
+  }).join('');
+  // 卡支付时列表下方是商户自有「立即支付」按钮；钱包时不显示（钱包按钮本身即操作）
+  const payBtn = state.elPM==='card' ? `<button class="submit-btn js-pay el-full" data-pay="card">${T('payNow')}</button>` : '';
+  return `<div class="el-body"><div class="pm-list">${rows}</div>${payBtn}</div>`;
 }
 
 /* Element / API 直连：Stripe 式内嵌收银控件
@@ -1185,6 +1217,7 @@ function bindApp(){
   const go=document.getElementById('go-checkout');
   if(go) go.onclick=startCheckout;
   document.querySelectorAll('[data-pm]').forEach(el=>el.onclick=()=>{state.selectedPM=el.dataset.pm;render();});
+  document.querySelectorAll('[data-elpm]').forEach(el=>el.onclick=()=>{state.elPM=el.dataset.elpm;render();});
   document.querySelectorAll('[data-show]').forEach(el=>el.onclick=()=>{const k=el.dataset.show;state.show[k]=!state.show[k];render();});
   document.querySelectorAll('.js-pay').forEach(el=>el.onclick=submitPay);
   const ct=document.getElementById('code-toggle'); if(ct) ct.onclick=()=>{state.codeOpen=!state.codeOpen;render();};
