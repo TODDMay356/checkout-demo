@@ -147,6 +147,29 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 @media(max-width:640px){.mbody{flex-direction:column}.mcol-pay{border-right:none;border-bottom:1px solid var(--line)}}
 .embed-tag{font-size:11px;color:var(--accent);font-weight:700;padding:4px 8px}
 .api-note{font-size:12px;color:#92400E;background:#FEF3C7;border-radius:8px;padding:9px 12px;margin-bottom:14px;line-height:1.5}
+.api-pci{font-size:12px;color:#9A3412;background:#FFF1E6;border:1px solid #FED7AA;border-radius:8px;padding:9px 12px;margin-bottom:16px;line-height:1.5;font-weight:600}
+
+/* ===== Element（主推）/ API 直连：Stripe 式内嵌收银控件 ===== */
+.el-inline-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#0F7B4F;background:#E7F7EF;border:1px solid #B6E7CF;border-radius:20px;padding:4px 12px;margin-bottom:14px}
+.el-frame{border:1px solid var(--line-regular);border-radius:14px;padding:16px;background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.el-frame-tag{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--accent);margin:-2px 0 14px}
+.el-frame-tag svg{display:block}
+.el-body{display:flex;flex-direction:column}
+.el-card-block{border:1.5px solid var(--accent);border-radius:12px;background:var(--accent-soft);padding:16px}
+.el-card-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.el-card-head .payment-icon{width:28px;height:20px}
+.el-card-head .pm-name{font-size:15px;font-weight:600;color:var(--text)}
+.el-card-head .cards{margin-left:auto}
+.el-card-block .card-group,.el-card-block .lpm-form{background:#fff;border-radius:var(--radius-m)}
+.el-card-block .lpm-form{padding:0}
+.submit-btn.el-full{min-width:0;width:100%;margin-top:16px}
+.el-or{display:flex;align-items:center;gap:12px;margin:18px 2px}
+.el-or .l{flex:1;height:1px;background:var(--line-regular)}
+.el-or .t{font-size:12px;color:var(--text-muted);white-space:nowrap}
+.el-wallets{display:flex;flex-direction:column;gap:10px}
+.wallet-express{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;height:48px;border-radius:8px;background:#000;color:#fff;cursor:pointer;border:none}
+.wallet-express .wb-logo{display:block}
+.wallet-express .wb-txt{font-size:18px;font-weight:500;letter-spacing:.2px}
 
 .co{background:transparent}
 /* ===== 托管收银台"整页"外壳（灰底 + 全宽白头 + 居中内容列，照真实生产 §A.2） ===== */
@@ -462,6 +485,9 @@ const CONFIG = {
       tagEmbedded:"飞来汇内嵌 iframe", tagEmbeddedNote:"FLYWAY EMBEDDED IFRAME · 合并卡 · 页内嵌入不跳转",
       tagApi:"商户自绘 · 拆分卡 · 商户直接收卡号（PCI 最大）", tagElement:"仅卡字段为飞来汇托管合并控件",
       apiNote:"此结账页完全由商户自行开发；飞来汇仅提供后端支付 API，不提供任何前端界面或配置项。",
+      elInline:"就在本页完成支付 · 无需跳转", elFrameTag:"Flyway Element · 内嵌于商户结账页的合并支付控件",
+      elOr:"或使用以下方式快捷支付", elCardTitle:"银行卡", elRecommend:"主推",
+      apiPci:"注意：API 直连由商户前端直接采集卡号，商户需自行取得并维护 PCI DSS 合规证书。", apiHostTag:"商户自绘 · 需 PCI 证书",
       cardInfo:"卡片信息", expMMYY:"月/年",
       successTitle:"支付成功", successDesc:"您的演示订单已完成（模拟）。",
       failTitle:"支付失败", retry:"重试", close:"关闭",
@@ -510,6 +536,9 @@ const CONFIG = {
       tagEmbedded:"Flyway embedded iframe", tagEmbeddedNote:"FLYWAY EMBEDDED IFRAME · merged card · embedded in-page, no redirect",
       tagApi:"Merchant-rendered · split card · merchant collects PAN (max PCI)", tagElement:"Only the card field is a Flyway-hosted merged control",
       apiNote:"This checkout page is fully built by the merchant; Flyway provides only the backend payment API — no front-end UI or configuration.",
+      elInline:"Pay right here — no redirect", elFrameTag:"Flyway Element · merged payment control embedded in the merchant checkout page",
+      elOr:"Or pay faster with", elCardTitle:"Card", elRecommend:"Recommended",
+      apiPci:"Note: with API direct integration the merchant's own front-end collects the card number, so the merchant must obtain and maintain PCI DSS certification.", apiHostTag:"Merchant-rendered · PCI cert required",
       cardInfo:"Card information", expMMYY:"MM / YY",
       successTitle:"Payment successful", successDesc:"Your demo order is complete (simulated).",
       failTitle:"Payment failed", retry:"Retry", close:"Close",
@@ -704,24 +733,46 @@ function checkoutView(){
       ${poweredBy()}
     </div>`;
   } else if(state.integration==='api'){
-    // API 直连：前端 100% 商户自建，飞来汇仅提供后端 API —— 不出现任何飞来汇界面/配置项
-    const a=amountStr();
+    // API 直连：前端 100% 商户自建，飞来汇仅提供后端 API —— 卡在前、AP/GP 直显图标，且需 PCI 证书
     payInner=`<div class="mcol-pay">
-      <div class="mtitle-row"><h3>${T('msPayMethod')}</h3><span class="host-tag host-mer">${T('tagApi')}</span></div>
+      <div class="mtitle-row"><h3>${T('msPayMethod')}</h3><span class="host-tag host-mer">${T('apiHostTag')}</span></div>
       <div class="api-note">🛠 ${T('apiNote')}</div>
-      ${cardForm()}
-      <div class="submit-box"><button class="submit-btn" id="pay-btn">${T('pay')} ${a.code} ${a.int}${a.dec}</button></div>
+      <div class="api-pci">🔐 ${T('apiPci')}</div>
+      ${inlineElementBody('api')}
       ${poweredBy()}
     </div>`;
-  } else { // element
+  } else { // element（主推）：内嵌于商户结账页的合并支付控件，免跳转
     payInner=`<div class="mcol-pay">
       <div class="mtitle-row"><h3>${T('msPayMethod')}</h3><span class="host-tag host-fly">${T('tagElement')}</span></div>
-      <div class="pm-card" style="padding:0">${pmList()}</div>
-      ${bigPayBtn()}
+      <div class="el-inline-badge">▣ ${T('elInline')}</div>
+      <div class="el-frame"><div class="el-frame-tag">${flyLogoSVG(12)} ${T('elFrameTag')}</div>${inlineElementBody('element')}</div>
       ${poweredBy()}
     </div>`;
   }
   return merchantShell(payInner);
+}
+
+/* Element / API 直连：Stripe 式内嵌收银控件
+   —— 银行卡在前（展开表单，主付款方式），Apple/Google Pay 在后（直接显示品牌按钮，无文案提示） */
+function inlineElementBody(mode){
+  const a=amountStr();
+  const cardTitle = state.lang==='zh' ? T('cardLabel') : 'Card';
+  return `<div class="el-body">
+    <div class="el-card-block">
+      <div class="el-card-head">
+        <span class="payment-icon">${pmIcon('card')}</span>
+        <span class="pm-name">${cardTitle}</span>
+        ${mode==='api' ? cardBrandsStrip() : ''}
+      </div>
+      ${cardForm()}
+      <button class="submit-btn js-pay el-full" data-pay="card">${T('pay')} ${a.code} ${a.int}${a.dec}</button>
+    </div>
+    <div class="el-or"><span class="l"></span><span class="t">${T('elOr')}</span><span class="l"></span></div>
+    <div class="el-wallets">
+      <button class="wallet-express js-pay" data-pay="applepay">${applePayLogo()}<span class="wb-txt">Pay</span></button>
+      <button class="wallet-express js-pay" data-pay="googlepay">${googlePayLogo()}<span class="wb-txt">Pay</span></button>
+    </div>
+  </div>`;
 }
 
 // 商户自有域名（模拟，非真实域名）
@@ -905,9 +956,9 @@ function cardForm(){
 function bigPayBtn(){
   const a=amountStr();
   const pm=CONFIG.paymentMethods.find(p=>p.id===state.selectedPM);
-  let inner=`${T('pay')} ${a.code} ${a.int}${a.dec}`, cls='submit-btn';
-  if(pm&&pm.id==='applepay'){ cls='submit-btn wallet-btn'; inner=`${applePayLogo()}<span class="wb-txt">Pay</span>`; }
-  else if(pm&&pm.id==='googlepay'){ cls='submit-btn wallet-btn'; inner=`${googlePayLogo()}<span class="wb-txt">Pay</span>`; }
+  let inner=`${T('pay')} ${a.code} ${a.int}${a.dec}`, cls='submit-btn js-pay';
+  if(pm&&pm.id==='applepay'){ cls='submit-btn js-pay wallet-btn'; inner=`${applePayLogo()}<span class="wb-txt">Pay</span>`; }
+  else if(pm&&pm.id==='googlepay'){ cls='submit-btn js-pay wallet-btn'; inner=`${googlePayLogo()}<span class="wb-txt">Pay</span>`; }
   return `<div class="submit-box"><button class="${cls}" id="pay-btn">${inner}</button></div>`;
 }
 // Apple Pay 按钮内白色苹果 logo
@@ -1082,7 +1133,7 @@ function bindApp(){
   if(go) go.onclick=startCheckout;
   document.querySelectorAll('[data-pm]').forEach(el=>el.onclick=()=>{state.selectedPM=el.dataset.pm;render();});
   document.querySelectorAll('[data-show]').forEach(el=>el.onclick=()=>{const k=el.dataset.show;state.show[k]=!state.show[k];render();});
-  const pay=document.getElementById('pay-btn'); if(pay) pay.onclick=submitPay;
+  document.querySelectorAll('.js-pay').forEach(el=>el.onclick=submitPay);
   const ct=document.getElementById('code-toggle'); if(ct) ct.onclick=()=>{state.codeOpen=!state.codeOpen;render();};
   // 收银台顶栏语言下拉：点按钮开合，选项切换语言
   const lb=document.getElementById('ck-lang-btn'); if(lb) lb.onclick=(e)=>{e.stopPropagation();state.langMenuOpen=!state.langMenuOpen;render();};
