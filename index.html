@@ -130,16 +130,37 @@ select.nice{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font
 .mbody{display:flex;gap:36px;padding:24px 26px 28px;align-items:flex-start}
 .mcol-sum{flex:0.9;min-width:0}
 .mcol-pay{flex:1.1;min-width:0}
-.prod-card{display:flex;gap:14px;align-items:center;background:#F6F7F9;border-radius:12px;padding:14px;margin-bottom:16px}
-.prod-img{width:76px;height:76px;border-radius:10px;flex:0 0 auto;position:relative;background:
+/* 左栏「商品介绍」（上部）：主图 + 缩略图 + 标题/评分/卖点/价格/标签 */
+.prod-img{border-radius:10px;position:relative;background:
   repeating-linear-gradient(45deg,#EDEFF3,#EDEFF3 9px,#E2E5EB 9px,#E2E5EB 18px)}
-.prod-img .qty{position:absolute;top:-7px;right:-7px;background:#6B7280;color:#fff;font-size:11px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
-.prod-meta{flex:1;min-width:0}
-.prod-meta .nm{font-size:14px;font-weight:600;color:var(--brand-ink);line-height:1.35}
-.prod-sub{font-size:12px;color:var(--text-muted);margin-top:5px}
-.prod-card .pr{font-size:15px;font-weight:800;color:var(--brand-ink);flex:0 0 auto}
+.prod-hero{margin-bottom:18px}
+.prod-img-lg{width:100%;height:190px;border-radius:12px}
+.prod-thumbs{display:flex;gap:8px;margin-top:8px}
+.prod-thumbs i{width:52px;height:52px;border-radius:8px;background:
+  repeating-linear-gradient(45deg,#F0F2F5,#F0F2F5 7px,#E5E8ED 7px,#E5E8ED 14px)}
+.prod-thumbs i:first-child{box-shadow:0 0 0 2px var(--accent)}
+.prod-intro{margin-top:14px}
+.prod-title{font-size:17px;font-weight:700;color:var(--brand-ink);line-height:1.35}
+.prod-rating{font-size:12px;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:6px}
+.prod-rating .stars{color:#F5A623;letter-spacing:1px}
+.prod-sell{font-size:13px;color:var(--text-secondary);margin-top:6px}
+.prod-price{font-size:24px;font-weight:800;color:var(--accent);margin-top:10px}
+.prod-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.prod-tags span{font-size:11px;color:var(--success);background:#EAF7F1;border:1px solid #CDEDE0;border-radius:6px;padding:3px 8px;font-weight:600}
+/* 订单小结 */
+.osum-block{border-top:1px solid var(--line);padding-top:14px}
 .osum-line{display:flex;justify-content:space-between;font-size:13px;color:var(--text-muted);margin:8px 2px}
 .osum-total{display:flex;justify-content:space-between;font-size:18px;font-weight:800;color:var(--brand-ink);border-top:1px solid var(--line);padding-top:14px;margin-top:10px}
+/* 左栏「商品详情」（下部） */
+.prod-detail{margin-top:22px;border-top:1px solid var(--line);padding-top:16px}
+.pd-title{font-size:14px;font-weight:700;color:var(--brand-ink);margin-bottom:10px}
+.pd-list{list-style:none;margin:0 0 12px;padding:0}
+.pd-list li{position:relative;padding-left:20px;font-size:13px;color:var(--text-secondary);line-height:1.5;margin:6px 0}
+.pd-list li::before{content:"✓";position:absolute;left:0;color:var(--success);font-weight:700}
+.pd-imgs{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.pd-imgs span{width:100%;height:150px;border-radius:10px;background:
+  repeating-linear-gradient(45deg,#F0F2F5,#F0F2F5 9px,#E6E9EE 9px,#E6E9EE 18px)}
+.pd-desc{font-size:12px;color:var(--text-muted);line-height:1.7}
 .powered{font-size:11px;color:var(--text-muted);text-align:center;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:5px}
 .pay-h{font-size:15px;color:var(--brand-ink);margin:0 0 16px;font-weight:700}
 .mtitle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
@@ -492,6 +513,11 @@ const CONFIG = {
       apiNote:"此结账页完全由商户自行开发；飞来汇仅提供后端支付 API，不提供任何前端界面或配置项。",
       elInline:"就在本页完成支付 · 无需跳转", elFrameTag:"Flyway Element · 内嵌于商户结账页的合并支付控件",
       elOr:"或使用以下方式快捷支付", elCardTitle:"银行卡", elRecommend:"主推", payNow:"立即支付",
+      prodSell:"跨境优选 · 全球直发", prodRating:"4.9 分 · 已售 1,200+", prodQty:"数量",
+      tagFree:"免运费", tagAuthentic:"正品保障", tagReturns:"7 天无理由",
+      pdTitle:"商品详情",
+      pd1:"跨境正品，官方渠道采购", pd2:"全球直发，支持多币种结算", pd3:"7 天无理由退货，售后无忧",
+      pdDesc:"这是用于演示收银台的示例商品，上述图片与详情均为占位内容，实际以商户商品页为准。",
       apiPci:"注意：API 直连由商户前端直接采集卡号，商户需自行取得并维护 PCI DSS 合规证书。", apiHostTag:"商户自绘 · 需 PCI 证书",
       cardInfo:"卡片信息", expMMYY:"月/年",
       successTitle:"支付成功", successDesc:"您的演示订单已完成（模拟）。",
@@ -543,6 +569,11 @@ const CONFIG = {
       apiNote:"This checkout page is fully built by the merchant; Flyway provides only the backend payment API — no front-end UI or configuration.",
       elInline:"Pay right here — no redirect", elFrameTag:"Flyway Element · merged payment control embedded in the merchant checkout page",
       elOr:"Or pay faster with", elCardTitle:"Card", elRecommend:"Recommended", payNow:"Pay now",
+      prodSell:"Cross-border pick · ships worldwide", prodRating:"4.9 · 1,200+ sold", prodQty:"Qty",
+      tagFree:"Free shipping", tagAuthentic:"Authentic", tagReturns:"7-day returns",
+      pdTitle:"Product details",
+      pd1:"Authentic goods sourced via official channels", pd2:"Ships worldwide, multi-currency checkout", pd3:"7-day no-reason returns",
+      pdDesc:"This is a sample product for the checkout demo; the image and details are placeholders — actual content comes from the merchant's product page.",
       apiPci:"Note: with API direct integration the merchant's own front-end collects the card number, so the merchant must obtain and maintain PCI DSS certification.", apiHostTag:"Merchant-rendered · PCI cert required",
       cardInfo:"Card information", expMMYY:"MM / YY",
       successTitle:"Payment successful", successDesc:"Your demo order is complete (simulated).",
@@ -813,19 +844,35 @@ function merchantShell(payInner){
 
 function orderSummary(){
   const a=amountStr();
+  // 左栏 = 商户商品/结账页内容：上部「商品介绍」+ 下部「商品详情」+ 订单小结
   return `<div class="mcol-sum">
-    <div class="prod-card">
-      <div class="prod-img"><span class="qty">1</span></div>
-      <div class="prod-meta">
-        <div class="nm">${T('shopTitle')}</div>
-        <div class="prod-sub">${T('msSubtotal')} · ${T('msFreeShip')}</div>
+    <div class="prod-hero">
+      <div class="prod-gallery">
+        <div class="prod-img prod-img-lg"></div>
+        <div class="prod-thumbs"><i></i><i></i><i></i></div>
       </div>
-      <div class="pr">${a.sym}${a.int}${a.dec}</div>
+      <div class="prod-intro">
+        <div class="prod-title">${T('shopTitle')}</div>
+        <div class="prod-rating"><span class="stars">★★★★★</span> ${T('prodRating')}</div>
+        <div class="prod-sell">${T('prodSell')}</div>
+        <div class="prod-price">${a.sym}${a.int}${a.dec}</div>
+        <div class="prod-tags"><span>${T('tagFree')}</span><span>${T('tagAuthentic')}</span><span>${T('tagReturns')}</span></div>
+      </div>
     </div>
-    <div class="osum-line"><span>${T('msSubtotal')}</span><span>${a.sym}${a.int}${a.dec}</span></div>
-    <div class="osum-line"><span>${T('msShipping')}</span><span>${T('msFreeShip')}</span></div>
-    <div class="osum-total"><span>${T('msTotal')} ${a.code}</span><span>${a.sym}${a.int}${a.dec}</span></div>
-    <div class="muted" style="font-size:12px;margin-top:14px">${T('payTo')}：${CONFIG.merchantName}</div>
+    <div class="osum-block">
+      <div class="osum-line"><span>${T('msSubtotal')} × 1</span><span>${a.sym}${a.int}${a.dec}</span></div>
+      <div class="osum-line"><span>${T('msShipping')}</span><span>${T('msFreeShip')}</span></div>
+      <div class="osum-total"><span>${T('msTotal')} ${a.code}</span><span>${a.sym}${a.int}${a.dec}</span></div>
+      <div class="muted" style="font-size:12px;margin-top:12px">${T('payTo')}：${CONFIG.merchantName}</div>
+    </div>
+    <div class="prod-detail">
+      <div class="pd-title">${T('pdTitle')}</div>
+      <ul class="pd-list">
+        <li>${T('pd1')}</li><li>${T('pd2')}</li><li>${T('pd3')}</li>
+      </ul>
+      <div class="pd-imgs"><span></span><span></span></div>
+      <div class="pd-desc">${T('pdDesc')}</div>
+    </div>
   </div>`;
 }
 
