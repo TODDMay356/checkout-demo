@@ -444,14 +444,14 @@ const ICONS={
    §11 数据配置 —— 编辑入口之二（渲染全部读 CONFIG，禁止硬编码进 DOM）
    ============================================================ */
 const CONFIG = {
-  builders:["WooCommerce","Shopyy","OpenCart","Shoplazza(店匠)","Magento2","Ueeshop","自建站(自有商城)"],
+  builders:["自建站(自有商城)","WooCommerce","Shopyy","OpenCart","Shoplazza(店匠)","Magento2","Ueeshop"],
   // 内部 key 与显示名映射（店匠显示中文、矩阵用 key）
   builderKey:{
     "WooCommerce":"WooCommerce","Shopyy":"Shopyy","OpenCart":"OpenCart",
     "Shoplazza(店匠)":"Shoplazza","Magento2":"Magento2","Ueeshop":"Ueeshop",
     "自建站(自有商城)":"SelfHosted"
   },
-  integrations:["redirect","embedded","api","element"],
+  integrations:["element","redirect","embedded","api"],
   // §6 支持矩阵：true / false（取消 planned 三态）。规则：自建站四种全支持；Element 仅自建站
   support:{
     WooCommerce:{redirect:true, embedded:true,  api:false, element:false},
@@ -614,8 +614,8 @@ const CONFIG = {
    ============================================================ */
 const state = {
   mode:"experience",          // experience | overview
-  builder:"WooCommerce",      // 显示名
-  integration:"redirect",
+  builder:"自建站(自有商城)",   // 显示名（默认落地在自建站，展示主推 Element）
+  integration:"element",
   perspective:"buyer",        // buyer(收银台预览,默认落地) | merchant(支付流程)
   lang:"zh",
   langMenuOpen:false,          // 收银台顶栏语言下拉
@@ -1332,10 +1332,10 @@ function applyEditionFallback(){
 }
 function resetAll(){
   Object.assign(state,{
-    mode:"experience",builder:"WooCommerce",integration:"redirect",perspective:"buyer",
+    mode:"experience",builder:"自建站(自有商城)",integration:"element",perspective:"buyer",
     lang:"zh",device:"desktop",currency:"USD",region:"BR",flow:"shop",
     show:{header:true,order:true},
-    selectedPM:"googlepay",overlay:null,codeOpen:false
+    selectedPM:"googlepay",elPM:"card",overlay:null,codeOpen:false
   });
   applyEditionFallback();
   render();
